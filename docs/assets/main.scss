@@ -1,0 +1,17 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+.tabular-grid {
+  display: grid;
+  text-align: center; 
+  border-right: 1px solid grey;
+  border-bottom: 1px solid grey;
+  margin: 1rem;
+
+  & > div {
+    border-left: 1px solid grey;
+    border-top: 1px solid grey;
+  }
+}
