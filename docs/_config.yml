@@ -17,10 +17,11 @@ plugins:
 kramdown:
   math-engine: katex
 jekyll-archives:
-  enabled:
-    - year
+  enabled: all
   layout: archive
   permalinks:
+    categories: '/categories/:name/'
+    tag: '/tag/:name/'
     year: '/year/:year/'
 
 # Exclude from processing.
