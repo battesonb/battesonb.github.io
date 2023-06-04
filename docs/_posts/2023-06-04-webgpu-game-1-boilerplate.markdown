@@ -87,6 +87,29 @@ div:
 </body>
 ```
 
+Add styles for a darker background and to center the canvas:
+
+```css
+/* style.css */
+
+:root {
+  color-scheme: light dark;
+  background-color: #121212;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+div.container {
+  margin: auto;
+}
+```
+
 Now, we want to grab a reference to the canvas in the `main.ts` file.
 
 ```ts
@@ -102,7 +125,7 @@ assertDefined(navigator.gpu, "WebGPU is not supported on this browser");
 ```
 
 We want to grab the `GPUAdapter` and `GPUDevice` from that adapter. The adapter
-can be thought of as a reference to the GPU hardware, while the device is use
+can be thought of as a reference to the GPU hardware, while the device is used
 for the bulk of communication to the GPU.
 
 ```ts
