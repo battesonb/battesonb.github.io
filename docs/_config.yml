@@ -13,16 +13,11 @@ github_username: battesonb
 theme: minima
 plugins:
   - jekyll-feed
-  - jekyll-archives
 kramdown:
   math-engine: katex
-jekyll-archives:
-  enabled: all
-  layout: archive
-  permalinks:
-    categories: '/categories/:name/'
-    tag: '/tag/:name/'
-    year: '/year/:year/'
+header_pages:
+  - about.markdown
+  - archives.html
 
 # Exclude from processing.
 # The following items will not be processed, by default.

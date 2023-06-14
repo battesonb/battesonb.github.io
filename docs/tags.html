@@ -1,0 +1,17 @@
+---
+layout: default
+title: Tags
+permalink: /archives/tags/
+---
+
+<div>
+	<h1>Tags</h1>
+	{% for tag in site.tags %}
+	<h3>{{ tag[0] }}</h3>
+	<ul class="archive-page">
+		{% for post in tag[1] %}
+		<li><a href='{{ site.base_url }}{{ post.url }}' title="{{ post.title }}">{{ post.title }}</a></li>
+		{% endfor %}
+	</ul>
+	{% endfor %}
+</div>

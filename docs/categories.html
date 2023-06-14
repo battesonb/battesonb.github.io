@@ -1,0 +1,17 @@
+---
+layout: default
+title: Categories
+permalink: /archives/categories/
+---
+
+<div>
+	<h1>Categories</h1>
+	{% for category in site.categories %}
+	<h3>{{ category[0] }}</h3>
+	<ul class="archive-page">
+		{% for post in category[1] %}
+		<li><a href='{{ site.base_url }}{{ post.url }}' title="{{ post.title }}">{{ post.title }}</a></li>
+		{% endfor %}
+	</ul>
+	{% endfor %}
+</div>
