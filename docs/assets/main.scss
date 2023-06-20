@@ -16,8 +16,13 @@
   }
 }
 
-img.centered {
-  display: block;
+.centered {
+  display: flex;
   margin-left: auto;
   margin-right: auto;
+  justify-content: center;
+}
+
+.margin {
+  margin: 15px;
 }
