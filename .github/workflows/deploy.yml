@@ -1,0 +1,35 @@
+name: Deploy website
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache gems 
+        uses: actions/cache@v3
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+      - name: Setup TeX Live
+        uses: teatimeguest/setup-texlive-action@v2
+        with:
+          packages: >-
+            latex
+            amsmath
+            amssymb
+            pgfplots
+      - name: Install pdf2svg
+        run: sudo apt-get install pdf2svg
+      - name: Compile and deploy
+        uses: jeffreytse/jekyll-deploy-action@v0.4.0
+        with:
+          provider: 'github'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          jekyll_src: './docs'
