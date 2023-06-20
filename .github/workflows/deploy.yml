@@ -21,9 +21,7 @@ jobs:
         uses: teatimeguest/setup-texlive-action@v2
         with:
           packages: >-
-            latex
-            amsmath
-            amssymb
+            scheme-basic
             pgfplots
       - name: Install pdf2svg
         run: sudo apt-get install pdf2svg
