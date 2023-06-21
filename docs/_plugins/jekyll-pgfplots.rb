@@ -9,19 +9,13 @@ module Jekyll
 
     def render(context)
       contents = header + super + footer
-      is_draft = context['page']['draft']
       page_path = File.basename(context['page']['url'], '.*')
       tmp_dir = File.join(Dir.pwd, 'pgf_tmp', page_path)
       tex_path = File.join(tmp_dir, "#{@file_name}.tex")
       pdf_path = File.join(tmp_dir, "#{@file_name}.pdf")
       FileUtils.mkdir_p(tmp_dir)
 
-      dest_dir =
-        if is_draft
-          tmp_dir
-        else
-          File.join(Dir.pwd, 'assets/pgf', page_path)
-        end
+      dest_dir = File.join(Dir.pwd, 'assets/pgf', page_path)
       dest_path = File.join(dest_dir, "#{@file_name}.svg")
       FileUtils.mkdir_p(dest_dir)
 
@@ -33,12 +27,7 @@ module Jekyll
         system("pdf2svg #{pdf_path} #{dest_path}")
       end
 
-      web_dest_path =
-        if is_draft
-          File.join('/pgf_tmp', page_path, "#{@file_name}.svg")
-        else
-          File.join('/assets/pgf', page_path, "#{@file_name}.svg")
-        end
+      web_dest_path = File.join('/assets/pgf', page_path, "#{@file_name}.svg")
       "<embed src=\"#{web_dest_path}\" type=\"image/svg+xml\" />"
     end
 
