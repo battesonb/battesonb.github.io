@@ -20,7 +20,7 @@ module Jekyll
         if is_draft
           tmp_dir
         else
-          File.join(Dir.pwd, 'assets/pgf', page_path)
+          File.join(Dir.pwd, 'pgf', page_path)
         end
       dest_path = File.join(dest_dir, "#{@file_name}.svg")
       FileUtils.mkdir_p(dest_dir)
@@ -37,7 +37,7 @@ module Jekyll
         if is_draft
           File.join('/pgf_tmp', page_path, "#{@file_name}.svg")
         else
-          File.join('/assets/pgf', page_path, "#{@file_name}.svg")
+          File.join('/pgf', page_path, "#{@file_name}.svg")
         end
       "<embed src=\"#{web_dest_path}\" type=\"image/svg+xml\" />"
     end
@@ -63,6 +63,7 @@ module Jekyll
         }
         \pgfmathsetseed{27}
         \begin{tikzpicture}
+        \tikzstyle{every node}=[font=\large]
       TEX
     end
 
