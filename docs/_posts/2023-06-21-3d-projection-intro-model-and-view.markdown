@@ -244,8 +244,9 @@ $$
 
 Next we can construct the rotation matrix, $$R$$, via a change of basis[^5].
 Also note that we invert the direction, as it represents the forward direction
-of the camera in right-handed coordinates. We want to hand the projection matrix
-a transformation in a left-handed coordinate system.
+of the camera in terms of what it can see (down the negative z-axis), but we
+want to work in the right-handed coordinate system until we get to the
+projection matrices.
 
 $$
 R = \begin{bmatrix}
