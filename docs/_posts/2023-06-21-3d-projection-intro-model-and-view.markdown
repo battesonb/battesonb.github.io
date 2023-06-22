@@ -20,7 +20,7 @@ where that model exists in the world. We also need a camera which specifies
 which part of the world we are currently observing.
 
 Lastly, we have to project this view of the world onto a cube. The end goal is
-to get the coordinates of this cube within the follow ranges[^1]:
+to get the coordinates of this cube within the following ranges[^1]:
 
 $$
   x \in [-1, 1] \\
@@ -31,8 +31,8 @@ $$
 These normalized device coordinates (NDC) differ across convention, handedness
 and graphics API. For some (usually right-handed), $$y$$ points downwards! I'm
 not going to enumerate these, but rather show how this cube is mapped to our
-screen in WebGPU. We look "down the z-axis", so I've coloured the side we look
-from blue:
+screen in WebGPU. The side we are facing is coloured blue, as we are looking
+down the z-axis.
 
 <div class="centered margin">
 {% pgf coordinate system %}
@@ -215,9 +215,9 @@ $$
 V = C^{-1}
 $$
 
-The only configuration we care about for a camera is it's position and rotation
-(not its scale). This is very similar to how we calculate the model matrix.
-First, we define some 3-dimensional vectors:
+The only configuration we care about for a camera is its position and rotation
+(not its scale). This is similar to how we calculate the model matrix. First, we
+define some 3-dimensional vectors:
 
 $$
 \begin{aligned}
@@ -229,7 +229,8 @@ $$
 $$
 
 The last three vectors are required to be orthogonal to each other and of unit
-length for upcoming assumptions. We can use these to construct the translation
+length for upcoming assumptions. Remembering that we are using homogeneous
+coordinates, so 4x4 instead of 3x3 matrices, we can construct the translation
 matrix quite simply as:
 
 $$
@@ -242,10 +243,9 @@ T = \begin{bmatrix}
 $$
 
 Next we can construct the rotation matrix, $$R$$, via a change of basis[^5].
-Remembering that we are using homogenous coordinates, so 4x4 instead of 3x3
-matrices. Also note that we invert the direction, as it represents the forward
-direction of the camera in right-handed coordinates. We want to hand the
-projection matrix a transformation in a left-handed coordinate system.
+Also note that we invert the direction, as it represents the forward direction
+of the camera in right-handed coordinates. We want to hand the projection matrix
+a transformation in a left-handed coordinate system.
 
 $$
 R = \begin{bmatrix}
@@ -257,14 +257,14 @@ r_z & u_z & -d_z & 0 \\
 $$
 
 However, we need the inverses. Also note the order of transformations in the
-original camera matrix below. Its rotation first, then translation (multiplying
+original camera matrix below. It's rotation first, then translation (multiplying
 from right to left) -- otherwise we end up rotating the camera about its offset.
 
 $$
 V = C^{-1} = (TR)^{-1} = R^{-1}T^{-1}
 $$
 
-We know, quite intuitively that the translation matrix can just have its
+We know, quite intuitively, that the translation matrix can just have its
 components negated (you can prove this for yourself if necessary):
 
 $$
@@ -281,7 +281,7 @@ matrix[^6]. This means that the inverse can be obtained by flipping the original
 matrix along its diagonal (its transpose):
 
 $$
-R^{-1} = \begin{bmatrix}
+R^{-1} = R^T = \begin{bmatrix}
 r_x & r_y & r_z & 0 \\
 u_x & u_y & u_z & 0 \\
 -d_x & -d_y & -d_z & 0 \\
@@ -308,7 +308,7 @@ u_x & u_y & u_z & 0 \\
 &= \begin{bmatrix}
 r_x & r_y & r_z & -e_x(r_x)-e_y(r_y)-e_z(r_z) \\
 u_x & u_y & u_z & -e_x(u_x)-e_y(u_y)-e_z(u_z) \\
-d_x & d_y & d_z & e_x(d_x)+e_y(d_y)+e_z(d_z) \\
+-d_x & -d_y & -d_z & e_x(d_x)+e_y(d_y)+e_z(d_z) \\
 0 & 0 & 0 & 1 \\
 \end{bmatrix}
 \end{aligned}
@@ -322,7 +322,7 @@ $$
 V = \begin{bmatrix}
 r_x & r_y & r_z & -\vec{e}\cdot\vec{r} \\
 u_x & u_y & u_z & -\vec{e}\cdot\vec{u} \\
-d_x & d_y & d_z & \vec{e}\cdot\vec{d} \\
+-d_x & -d_y & -d_z & \vec{e}\cdot\vec{d} \\
 0 & 0 & 0 & 1 \\
 \end{bmatrix}
 $$
