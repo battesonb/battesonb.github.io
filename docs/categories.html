@@ -5,10 +5,12 @@ permalink: /archives/categories/
 ---
 
 <div>
-	<h1>Categories</h1>
+	<header class="post-header">
+		<h1 class="post-title">Categories</h1>
+	</header>
 	{% for category in site.categories %}
-	<h3>{{ category[0] }}</h3>
-	<ul class="archive-page">
+	<h3 style="font-style: italic; font-family: 'Times New Roman', Times, serif">{{ category[0] }}</h3>
+	<ul class="post-list">
 		{% for post in category[1] %}
 		<li><a href='{{ site.base_url }}{{ post.url }}' title="{{ post.title }}">{{ post.title }}</a></li>
 		{% endfor %}

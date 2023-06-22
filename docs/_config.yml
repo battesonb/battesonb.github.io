@@ -1,7 +1,6 @@
 title: Byron's Blog
-email: byronbatteson@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Byron Batteson's blog about web, software, computer science and related fields.
+  A blog about web, software, computer science and related fields.
 baseurl: "/"
 domain: battesonb.github.io
 url: https://battesonb.github.io
@@ -10,7 +9,7 @@ github_username: battesonb
   # permalink: /blog/:year/:month/:day/:title/
 
 # Build settings
-theme: minima
+# theme: minima # Custom for now
 plugins:
   - jekyll-feed
 kramdown:
