@@ -201,6 +201,9 @@
 
 .post-meta {
   display: inline-block;
+  @include media-query($on-laptop) {
+    display: block;
+  }
   font-size: $small-font-size;
   color: $grey-color;
   min-width: 7.5em;
