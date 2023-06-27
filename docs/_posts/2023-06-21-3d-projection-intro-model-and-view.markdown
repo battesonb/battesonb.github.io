@@ -3,6 +3,7 @@ layout: post
 title:  "3D Projection: Introduction, Model and View"
 date:   2023-06-21
 categories: graphics
+tags: [linear algebra]
 ---
 
 {% include mathjax.html %}
