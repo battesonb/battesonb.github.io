@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "WebGPU game (#2): Rainbow triangle"
+series: "WebGPU game"
 date:   2023-06-07
 categories: graphics
 tags: webgpu

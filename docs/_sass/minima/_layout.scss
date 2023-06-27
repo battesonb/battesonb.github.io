@@ -259,3 +259,28 @@
     }
   }
 }
+
+.post-nav {
+  & > hr {
+    border: 1px solid #ea4;
+    margin-bottom: 0.66em;
+  }
+
+  .post-nav-links {
+    display: flex;
+    margin-bottom: 1em;
+    flex-direction: row;
+
+    & > div {
+      flex: 1;
+    }
+
+    & > .post-nav-prev {
+      text-align: left;
+    }
+
+    & > .post-nav-next {
+      text-align: right;
+    }
+  }
+}

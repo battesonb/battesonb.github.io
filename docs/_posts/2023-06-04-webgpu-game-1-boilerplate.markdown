@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "WebGPU game (#1): Boilerplate"
+series: "WebGPU game"
 date:   2023-06-04
 categories: graphics
 tags: webgpu

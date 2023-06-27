@@ -19,6 +19,42 @@ layout: default
     {{ content }}
   </div>
 
+  <!-- Show links to previous and next post if in a series -->
+  {%- unless page.series.nil? -%}
+    {%- assign posts = site.posts | where: "series", page.series | sort: 'date' -%}
+    {%- assign postCount = posts | size -%}
+    {%- for post in posts -%}
+      {%- if post.url == page.url -%}
+        {%- assign index = forloop.index0 -%}
+        {%- assign prevIndex = index | minus: 1 -%}
+        {%- assign nextIndex = index | plus: 1 -%}
+
+
+        <div class="post-nav">
+        {%- if prevIndex >= 0 or nextIndex < postCount -%}
+          <hr/>
+          <h3>{{ post.series }} series links</h3>
+        {%- endif -%}
+          <div class="post-nav-links">
+          {%- if prevIndex >= 0 -%}
+            {%- assign prevPost = posts[prevIndex] -%}
+            <div class="post-nav-prev">
+              <a href="{{ prevPost.url }}">&laquo; {{ prevPost.title }}</a>
+            </div>
+          {%- endif -%}
+
+          {%- if nextIndex < postCount -%}
+            {%- assign nextPost = posts[nextIndex] -%}
+            <div class="post-nav-next">
+              <a href="{{ nextPost.url }}">{{ nextPost.title }} &raquo;</a>
+            </div>
+          {%- endif -%}
+          </div>
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endunless -%}
+
   {%- if site.disqus.shortname -%}
     {%- include disqus_comments.html -%}
   {%- endif -%}

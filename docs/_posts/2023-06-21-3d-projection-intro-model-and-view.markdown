@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "3D Projection: Introduction, Model and View"
+series: "3D projection"
 date:   2023-06-21
 categories: graphics
 tags: [linear algebra]

@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "3D Projection: Orthographic Projection"
+series: "3D projection"
 date:   2023-06-27
 categories: graphics
 tags: [linear algebra]
