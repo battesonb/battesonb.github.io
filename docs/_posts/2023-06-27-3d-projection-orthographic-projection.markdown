@@ -131,7 +131,7 @@ We want to perform the following steps (in order):
    c = \left(\frac{r+l}{2},\frac{t+b}{2},n\right)
    $$
 
-2. Scale the volume to size of canonical view volume, $$s_C$$: \\
+2. Scale the volume to the size of the canonical view volume, $$s_C$$: \\
    $$
    s_C = (2,2,1)
    $$
@@ -176,10 +176,9 @@ $$
 
 There are some additional reductions that can be made, but that's essentially
 the orthographic projection matrix. For example, if using this as your
-projection matrix, you may simply want to store the center point (at the near
-plane), the near, far, screen width and screen height values. Then, you simply
-create this matrix every frame (or whenever the camera moves) from these values
-when doing the full MVP transformation.
+projection matrix, you may simply want to store the near, far, screen width and
+screen height values. Then, you simply create this matrix from the specified
+values when doing the full MVP transformation.
 
 ## Footnotes
 
