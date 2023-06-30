@@ -7,8 +7,6 @@ categories: graphics
 tags: [linear algebra]
 ---
 
-{% include mathjax.html %}
-
 We're finally at the last stretch for 3D projection! In this post, we want to
 transform what is known as the _view frustum_[^1] into a cube. Recall from
 the previous post, the following is a perspective view frustum:
@@ -53,8 +51,8 @@ this limitation:
 
 ## Derivation
 
-Starting with the y-coordinate, let's imagine the x-axis is pointing out of the
-screen from the origin (or we are looking down the x-axis).
+Starting with the $$y$$-coordinate, let's imagine the $$x$$-axis is pointing out
+of the screen from the origin (or we are looking down the $$x$$-axis).
 
 <div class="centered margin">
 {% pgf screen y coordinate %}
@@ -173,8 +171,8 @@ final row of the resultant vector through the use of the $$\color{red}{-1}$$.
 
 Now, this forces us to divide the $$z_s$$ coordinate by $$-z$$ when going from
 clip-space to NDC. We want to preserve the initial $$z$$ as-is, but remove the
-negative the signs to pass to the left-handed orthographic projection derived in
-the [previous post]({% post_url 2023-06-27-3d-projection-orthographic-projection
+negative signs to pass to the left-handed orthographic projection derived in the
+[previous post]({% post_url 2023-06-27-3d-projection-orthographic-projection
 %}). Therefore we must have:
 
 $$

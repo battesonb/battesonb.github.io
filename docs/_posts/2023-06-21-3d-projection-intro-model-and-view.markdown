@@ -7,8 +7,6 @@ categories: graphics
 tags: [linear algebra]
 ---
 
-{% include mathjax.html %}
-
 I have to pause the WebGPU posts to derive a series of transformations that will
 get us from 3D space to a 2D image on the screen. I will be assuming an
 understanding of basic linear algebra, but I'll try to simplify, link out or
@@ -323,9 +321,9 @@ following:
 
 $$
 V = \begin{bmatrix}
-r_x & r_y & r_z & -\vec{e}\cdot\vec{r} \\
-u_x & u_y & u_z & -\vec{e}\cdot\vec{u} \\
--d_x & -d_y & -d_z & \vec{e}\cdot\vec{d} \\
+r_x & r_y & r_z & -\vec{e}\cdot\hat{r} \\
+u_x & u_y & u_z & -\vec{e}\cdot\hat{u} \\
+-d_x & -d_y & -d_z & \vec{e}\cdot\hat{d} \\
 0 & 0 & 0 & 1 \\
 \end{bmatrix}
 $$

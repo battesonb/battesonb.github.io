@@ -7,8 +7,6 @@ categories: graphics
 tags: [linear algebra]
 ---
 
-{% include mathjax.html %}
-
 We need to derive a projection matrix, as alluded to in the previous [post]({%
 post_url 2023-06-21-3d-projection-intro-model-and-view %}). The orthographic is
 the simplest to start with, but we'll move on to a perspective projection in a

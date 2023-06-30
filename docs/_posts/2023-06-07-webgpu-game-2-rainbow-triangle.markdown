@@ -7,8 +7,6 @@ categories: graphics
 tags: webgpu
 ---
 
-{% include mathjax.html %}
-
 Today, I just want to get something rendering on the screen. This requires quite
 a bit of boilerplate (more), and next is some linear algebra for projecting 3D
 objects onto the screen. I'm going to split out the proofs for these
