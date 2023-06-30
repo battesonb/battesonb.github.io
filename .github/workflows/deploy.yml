@@ -31,6 +31,8 @@ jobs:
         run: sudo apt-get install pdf2svg
       - name: Compile and deploy
         uses: jeffreytse/jekyll-deploy-action@v0.4.0
+        env:
+          EXECJS_RUNTIME: Node
         with:
           provider: 'github'
           token: ${{ secrets.GITHUB_TOKEN }}
