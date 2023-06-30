@@ -17,6 +17,10 @@ jobs:
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-gems-
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
       - name: Setup TeX Live
         uses: teatimeguest/setup-texlive-action@v2
         with:
