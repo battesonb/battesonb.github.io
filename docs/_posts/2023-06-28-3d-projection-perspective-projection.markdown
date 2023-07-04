@@ -188,7 +188,7 @@ back to its original scale (with the sign flipped into a positive). So we assume
 the last two elements, $$m_1$$ and $$m_2$$, of the row are unknown.
 
 $$
-m_1z + m_2 + z^2
+m_1z + m_2 = z^2
 $$
 
 We know that this equation must be satisfied at the near and far clipping
