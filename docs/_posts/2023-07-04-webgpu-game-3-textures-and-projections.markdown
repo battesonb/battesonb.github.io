@@ -453,11 +453,11 @@ export class Camera {
   }
 
   /**
-   * Set the pitch between -Math.PI and Math.PI. Anything else is disregarded as
+   * Set the pitch between -90 and 90 degrees. Anything else is disregarded as
    * we treat y as up.
    */
   set pitch(value: number) {
-    this._pitch = Math.max(-Math.PI + 0.01, Math.min(Math.PI - 0.01, value));
+    this._pitch = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, value));
   }
 
   /**
