@@ -270,7 +270,7 @@ You should end up with the following result:
 
 I thought I would squeeze the projection work into this post, since the texture
 additions were quite minimal. If you haven't, or you're not comfortable with the
-MVP projection matrix, I'd recommend going through my [3D projection]({%
+MVP transformation matrix, I'd recommend going through my [3D projection]({%
 post_url 2023-06-21-3d-projection-intro-model-and-view %}) series. I won't be
 explaining the *why* of the matrices I use here. You can really think of
 matrices as compressed maths operations, which means that they are explicitly
