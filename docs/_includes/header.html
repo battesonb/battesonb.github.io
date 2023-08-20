@@ -1,9 +1,19 @@
 <header class="site-header" role="banner">
+  <script>{% include dark-mode-toggle.js %}</script>
 
   <div class="wrapper">
     {%- assign default_paths = site.pages | map: "path" -%}
     {%- assign page_paths = site.header_pages | default: default_paths -%}
     <a class="site-title" rel="author" href="{{ "/" | relative_url }}">{{ site.title | escape }}</a>
+
+    <div class="toggle-wrapper">
+      <div aria-label="Dark mode toggle" class="toggle" id="color-scheme-toggle" style="display: none;">
+        <div class="icons">
+          {% include icon-moon.svg %}
+          {% include icon-sun.svg %}
+        </div>
+      </div>
+    </div>
 
     {%- if page_paths -%}
       <nav class="site-nav">

@@ -3,6 +3,63 @@
 
 @import "minima";
 
+.toggle-wrapper {
+  display: inline-block;
+  padding: 1em 0.85em;
+}
+
+.toggle {
+  height: 5px;
+  width: 32px;
+  background: var(--text-color);
+  border-radius: 23px;
+  padding: 12px;
+  position: relative;
+  margin: auto;
+  cursor: pointer;
+}
+
+.toggle::before {
+  content: "";
+  display: block;
+  left: 3px;
+  top: 3px;
+  height: 23px;
+  width: 23px;
+  border-radius: 23px;
+  background: var(--background-color);
+  position: absolute;
+  z-index: 2;
+  transform: translate(0);
+  transition: transform 0.15s ease;
+}
+
+.toggle.enabled::before {
+  transform: translateX(27px);
+}
+
+.toggle .icons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+}
+
+.toggle .icons svg:first-child {
+  margin-right: 4px;
+}
+
+.toggle .icons svg:last-child {
+  margin-left: 4px;
+}
+
+.toggle .icons svg {
+  fill: var(--background-color);
+  padding: 5px 0;
+  height: 20px;
+  width: 20px;
+}
+
 .tabular-grid {
   display: grid;
   text-align: center; 
@@ -28,6 +85,7 @@
 }
 
 embed {
+  background-color: #fff;
   width: 100%;
   max-width: 500px;
 }

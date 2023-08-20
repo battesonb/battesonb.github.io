@@ -2,7 +2,7 @@
  * Site header
  */
 .site-header {
-  border-top: 5px solid #ea4;
+  border-top: 5px solid #{$brand-color};
   padding-top: 1em;
   min-height: $spacing-unit * 1.865;
 
@@ -25,6 +25,7 @@
 }
 
 .site-nav {
+  display: flex;
   float: right;
   line-height: $base-line-height * $base-font-size * 2.25;
 
@@ -106,7 +107,7 @@
  * Site footer
  */
 .site-footer {
-  border-top: 5px solid #ea4;
+  border-top: 5px solid #{$brand-color};
   margin: 0 20px;
   padding: $spacing-unit 0;
 }
@@ -262,7 +263,7 @@
 
 .post-nav {
   & > hr {
-    border: 1px solid #ea4;
+    border: 1px solid #{$brand-color};
     margin-bottom: 0.66em;
   }
 
