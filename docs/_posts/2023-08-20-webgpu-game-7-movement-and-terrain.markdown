@@ -192,8 +192,8 @@ camera is coming to a progressively gradual stop.
   \node[circle,minimum size=2cm,draw=black] (CF) {Camera};
   \node[circle,minimum size=2cm,draw=black,right=10cm of CF] (PF) {Player};
 
-  \node[circle,minimum size=2cm,draw=black,below=1cm of CF] (CC) {Camera};
-  \node[circle,minimum size=2cm,draw=black,right=2cm of CC] (PC) {Player};
+  \node[circle,minimum size=2cm,draw=black,below=1cm of PF] (PC) {Player};
+  \node[circle,minimum size=2cm,draw=black,left=2cm of PC] (CC) {Camera};
 
   \draw[-] (CF) -- (PF) node[midway,above] {10m};
   \draw[-,line width=0.1cm,red] (CF) -- ++(9, 0) node[midway,below] {8m};
@@ -209,8 +209,9 @@ export function clamp(a: number, b: number, value: number) {
 
 export function lerp(a: number, b: number, ratio: number) {
   const t = clamp(0, 1, ratio);
-  // fun fact, I wrote a way more complicated equation here. The definition
-  // above made me rethink what I had written.
+  // fun fact, I wrote a way more complicated equation here and ended up //
+  // flipping the start (a) and end (b) values. The definition above made me
+  // rethink what I had written.
   return a + t * (b - a);
 }
 ```
@@ -227,7 +228,7 @@ export class Follow extends Component {
   transform?: Transform;
   target?: Entity;
 
-  constructor(targetName: string, offset: number, lerpRatio: number = 0.92) {
+  constructor(targetName: string, offset: number, lerpRatio: number = 0.05) {
     super();
     this.targetName = targetName;
     this.offset = offset;
@@ -593,7 +594,7 @@ it for this series.
 
 ## Links
 
-1. [Git tree](https://github.com/battesonb/webgpu-blog-game/tree/f1908646a91752e02f2822e3292ada9445038270)
+1. [Git tree](https://github.com/battesonb/webgpu-blog-game/tree/f2262b544fcd0b5d6ac0ee9fa33d9f6166b43d06)
 
 ## Footnotes
 
