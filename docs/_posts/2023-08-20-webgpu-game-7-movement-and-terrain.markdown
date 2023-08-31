@@ -209,9 +209,6 @@ export function clamp(a: number, b: number, value: number) {
 
 export function lerp(a: number, b: number, ratio: number) {
   const t = clamp(0, 1, ratio);
-  // fun fact, I wrote a way more complicated equation here and ended up //
-  // flipping the start (a) and end (b) values. The definition above made me
-  // rethink what I had written.
   return a + t * (b - a);
 }
 ```
@@ -334,6 +331,34 @@ export enum Block {
   Dirt = 2,
 }
 
+// The index of the top-face of the given block in the texture atlas.
+function topIndex(block: Block) {
+  switch (block) {
+    case Block.Dirt:
+      return 0;
+    case Block.Grass:
+      return 2;
+    case Block.Stone:
+      return 4;
+    case Block.Air:
+      throw new Error("Should never call with air");
+  }
+}
+
+// The index of the side-face of the given block in the texture atlas.
+function sideIndex(block: Block) {
+  switch (block) {
+    case Block.Dirt:
+      return 1;
+    case Block.Grass:
+      return 3;
+    case Block.Stone:
+      return 5;
+    case Block.Air:
+      throw new Error("Should never call with air");
+  }
+}
+
 export class Terrain extends Component {
   private _blocks: Block[];
   private _mesh?: Mesh;
@@ -357,7 +382,7 @@ export class Terrain extends Component {
       }
       // Some arbitrary trigonometric functions to create some variance in the
       // terrain.
-      if (c.y > 2 * (-Math.cos(c.x * 0.15) + Math.sin(c.z * 0.25 + 0.5))) {
+      if (c.y > 1 + (Math.cos(c.z * 0.2 - 0.3 + c.x * 0.15) + Math.sin(c.z * 0.25 + 0.5))) {
         return Block.Air;
       }
       return Block.Dirt;
@@ -376,11 +401,12 @@ export class Terrain extends Component {
     // for each block, either provide the cube from the function exported from
     // the terrain entity's file.
     return array.from({length: volume}).map((_, index) => {
-      if (this._blocks[index] == block.air) {
+      const block = this._blocks[index];
+      if (block == Block.air) {
         return [];
       }
       const c = Terrain.coordinates(index);
-      return cube(texture, 2, 3).map(a => {
+      return cube(texture, topIndex(block), sideIndex(block)).map(a => {
           a.position.x += c.x;
           a.position.y += c.y;
           a.position.z += c.z;
@@ -502,7 +528,7 @@ export class Terrain extends Component {
       ...
       // new
       return cardinalDirections.map(d => {
-        return cubePlane(texture, 2, 3, d).map(a => {
+        return cubePlane(texture, topIndex(block), sideIndex(block), d).map(a => {
             a.position.x += c.x;
             a.position.y += c.y;
             a.position.z += c.z;
@@ -594,7 +620,7 @@ it for this series.
 
 ## Links
 
-1. [Git tree](https://github.com/battesonb/webgpu-blog-game/tree/f2262b544fcd0b5d6ac0ee9fa33d9f6166b43d06)
+1. [Git tree](https://github.com/battesonb/webgpu-blog-game/tree/b7361067732a393ec27f9605b77719a2b113d1a2)
 
 ## Footnotes
 
