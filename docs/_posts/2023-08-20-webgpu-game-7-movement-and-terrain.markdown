@@ -236,7 +236,7 @@ export class Follow extends Component {
     const {world} = ctx;
     this.target = world.getByName(this.targetName);
     this.transform = this.getComponent(Transform);
-    this.lerpToTarget(0);
+    this.lerpToTarget(1);
   }
 
   update(_: UpdateContext): void {
@@ -387,6 +387,23 @@ export class Terrain extends Component {
       }
       return Block.Dirt;
     });
+
+    this._blocks = this._blocks.map((block, index) => {
+      const c = Terrain.coordinates(index);
+      if (block == Block.Air) {
+        // Decorate the world with some stone features
+        if (Math.random() < 0.025 && this.hasNeighbor(c, new Vec3(0, -1, 0))) {
+          return Block.Stone;
+        }
+        return block;
+      }
+      // Convert all air-exposed dirt blocks into grass blocks. Note the renamed
+      // Vec3#unitY method.
+      if (!this.hasNeighbor(c, Vec3.unitY())) {
+        return Block.Grass
+      }
+      return block;
+    });
   }
 
   init(ctx: InitContext): void {
@@ -491,26 +508,26 @@ function cubePlane(
 ) {
   if (direction.x == 1) {
     return [
-      new Vertex(new Vec3(0.5, -0.5, 0.5), uvFromIndex(sideIndex, 0.0, 1.0, texture)),
-      new Vertex(new Vec3(0.5, -0.5, -0.5), uvFromIndex(sideIndex, 1.0, 1.0, texture)),
-      new Vertex(new Vec3(0.5, 0.5, -0.5), uvFromIndex(sideIndex, 1.0, 0.0, texture)),
-      new Vertex(new Vec3(0.5, 0.5, 0.5), uvFromIndex(sideIndex, 0.0, 0.0, texture)),
+      new Vertex(new Vec3(1, 0, 1), uvFromIndex(sideIndex, 0.0, 1.0, texture)),
+      new Vertex(new Vec3(1, 0, 0), uvFromIndex(sideIndex, 1.0, 1.0, texture)),
+      new Vertex(new Vec3(1, 1, 0), uvFromIndex(sideIndex, 1.0, 0.0, texture)),
+      new Vertex(new Vec3(1, 1, 1), uvFromIndex(sideIndex, 0.0, 0.0, texture)),
     ];
   // skipping x == -1 (we can't see it)
   } else if (direction.z == 1) {
     return [
-      new Vertex(new Vec3(-0.5, -0.5, 0.5), uvFromIndex(sideIndex, 0.0, 1.0, texture)),
-      new Vertex(new Vec3(0.5, -0.5, 0.5), uvFromIndex(sideIndex, 1.0, 1.0, texture)),
-      new Vertex(new Vec3(0.5, 0.5, 0.5), uvFromIndex(sideIndex, 1.0, 0.0, texture)),
-      new Vertex(new Vec3(-0.5, 0.5, 0.5), uvFromIndex(sideIndex, 0.0, 0.0, texture)),
+      new Vertex(new Vec3(0, 0, 1), uvFromIndex(sideIndex, 0.0, 1.0, texture)),
+      new Vertex(new Vec3(1, 0, 1), uvFromIndex(sideIndex, 1.0, 1.0, texture)),
+      new Vertex(new Vec3(1, 1, 1), uvFromIndex(sideIndex, 1.0, 0.0, texture)),
+      new Vertex(new Vec3(0, 1, 1), uvFromIndex(sideIndex, 0.0, 0.0, texture)),
     ];
   // skipping z == -1 (we can't see it)
   } else if (direction.y == 1) {
     return [
-      new Vertex(new Vec3(-0.5, 0.5, 0.5), uvFromIndex(topIndex, 0.0, 1.0, texture)),
-      new Vertex(new Vec3(0.5, 0.5, 0.5), uvFromIndex(topIndex, 1.0, 1.0, texture)),
-      new Vertex(new Vec3(0.5, 0.5, -0.5), uvFromIndex(topIndex, 1.0, 0.0, texture)),
-      new Vertex(new Vec3(-0.5, 0.5, -0.5), uvFromIndex(topIndex, 0.0, 0.0, texture)),
+      new Vertex(new Vec3(0, 1, 1), uvFromIndex(topIndex, 0.0, 1.0, texture)),
+      new Vertex(new Vec3(1, 1, 1), uvFromIndex(topIndex, 1.0, 1.0, texture)),
+      new Vertex(new Vec3(1, 1, 0), uvFromIndex(topIndex, 1.0, 0.0, texture)),
+      new Vertex(new Vec3(0, 1, 0), uvFromIndex(topIndex, 0.0, 0.0, texture)),
     ];
   }
   // skipping y == -1 (we can't see it)
@@ -620,7 +637,7 @@ it for this series.
 
 ## Links
 
-1. [Git tree](https://github.com/battesonb/webgpu-blog-game/tree/b7361067732a393ec27f9605b77719a2b113d1a2)
+1. [Git tree](https://github.com/battesonb/webgpu-blog-game/tree/7a1951cc45e0c6052c274902dc8a821c0e01d7ac)
 
 ## Footnotes
 
