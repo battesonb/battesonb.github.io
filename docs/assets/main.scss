@@ -85,7 +85,7 @@
 }
 
 embed {
-  background-color: #fff;
+  filter: var(--embed-filter);
   width: 100%;
   max-width: 500px;
 }
