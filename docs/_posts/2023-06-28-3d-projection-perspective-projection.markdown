@@ -57,12 +57,12 @@ of the screen from the origin (or we are looking down the $$x$$-axis).
 <div class="centered margin">
 {% pgf screen y coordinate %}
   \tikzmath{
-    \fz = 4;
-    \fy = 3;
+    \fz = 3;
+    \fy = 1.5;
     \nz = 1;
     \ny = \nz*(\fy/\fz);
-    \y = 1.25;
-    \z = 2.5;
+    \y = 0.65;
+    \z = 2;
     \ys = (\nz*\y)/\z;
     \ang = atan2(\fz,\fy);
   }
@@ -77,19 +77,22 @@ of the screen from the origin (or we are looking down the $$x$$-axis).
     ticks=none,
     ylabel={$y$},
     xlabel={$-z$},
-    xmin=0,xmax=5,ymin=-(\fy+1),ymax=\fy+1
+    xmin=0,xmax=3.5,ymin=-\fy,ymax=\fy
   ]
-  \draw[-latex] (0,0) -- (-1, 0) node[anchor=south] {$z$};
+  \draw[-latex] (0,0) -- (-0.5, 0) node[anchor=south] {$z$};
 
   \draw[dashed] (0,0) -- (\nz,\ny);
   \draw[dashed] (0,0) -- (\nz,-\ny);
 
   \filldraw[fill=orange,fill opacity=0.2]
-    (\nz,\ny)--
+    (\nz,\ny) --
     (\fz,\fy) --
-    (\fz,-\fy) node[opacity=1, anchor=north] {$-f$} --
-    (\nz,-\ny) node[opacity=1, anchor=north] {$-n$}  --
+    (\fz,-\fy) --
+    (\nz,-\ny) --
     (\nz,\ny);
+
+  \node[anchor=north east] at (\fz,0) {$-f$};
+  \node[anchor=north east] at (\nz,0) {$-n$};
 
   \draw[black!20!green] (0,0) -- (\z, \y) node[black,anchor=west] {$y$};
   \draw[dashed] (\z, \y) -- (\z, 0) node[anchor=north] {$z$};
