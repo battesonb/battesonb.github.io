@@ -7,10 +7,10 @@ categories: graphics
 tags: webgpu
 ---
 
-[Previously]({% post_url
-2023-08-20-webgpu-game-7-movement-and-terrain %}), we added player movement and
-a terrain. However, the player does not yet interact with the terrain at all. To
-remedy this, we're going implement some rudimentary physics
+[Previously]({% post_url 2023-08-20-webgpu-game-7-movement-and-terrain %}), we
+added player movement and a terrain. However, the player does not yet interact
+with the terrain at all. To remedy this, we're going to implement some
+rudimentary physics
 
 ## Physics
 
@@ -355,7 +355,7 @@ export class PlayerController extends Component {
       this._body!.velocity.z = 0;
     }
 
-    // let the player to jump if it's on the ground
+    // let the player jump if it's on the ground
     if (input.keyDown(" ") && this._body!.onGround && this._body!.velocity.y <= 0) {
       this._body!.velocity.y = this._jumpSpeed;
     }
