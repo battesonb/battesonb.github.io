@@ -85,7 +85,24 @@ AABBs are intersecting. I've followed the approach of first checking if any of
 the axes are separate. If so, we can exit early knowing that the AABBs don't
 intersect.
 
-TODO diagram intersecting vs not.
+<div class="centered margin">
+{% pgf intersection comparison %}
+  \tikzmath{
+    \size = 5;
+    \offset = 1;
+  }
+  \begin{scope}
+    \draw[black, line width=1mm] (0, 0, 0) rectangle ++(\size, \size, 0);
+    \draw[black, line width=1mm] (\size + \offset, 1, 0) rectangle ++(\size, \size, 0);
+    \draw[black!40!green, line width=0.5mm] (\size, -0.5, 0) -- (\size + \offset, -0.5, 0) node[midway,below=5mm] {\Huge Not overlapping};
+  \end{scope}
+  \begin{scope}[shift={({\size * 3},0,0)}]
+    \draw[black, line width=1mm] (0, 0, 0) rectangle ++(\size, \size, 0);
+    \draw[black, line width=1mm] (\size - \offset, 1, 0) rectangle ++(\size, \size, 0);
+    \draw[black!30!red, line width=0.5mm] (\size - \offset, -0.5, 0) -- (\size, -0.5, 0) node[midway,below=5mm] {\Huge Overlapping};
+  \end{scope}
+{% endpgf %}
+</div>
 
 Otherwise, we can iterate over the axes and determine how much the AABBs overlap
 in that direction. We're going to assume that the minimum overlapping axis is
@@ -95,7 +112,32 @@ the middle of a block. In one step of the simulation, the entity is expected to
 fall a small distance as a result of gravity. However, the entity is also
 detected as overlapping the block from the $$x$$-axis by a larger amount.
 
-TODO diagram pathalogical (but common) case
+<div class="centered margin">
+{% pgf collision axis preference %}
+  \tikzmath{
+    \small = 2;
+    \big = 5;
+    \offset = 2;
+    \change = 0.5;
+  }
+  \begin{scope}
+    %% entity
+    \draw[black, line width=1mm] ({(\big - \small) / 2}, \big, 0) rectangle ++(\small, \small, 0);
+    %% block
+    \draw[black, line width=1mm] (0, 0, 0) rectangle ++(\big, \big, 0);
+  \end{scope}
+  \draw[-latex, line width=1mm] ({\big + \offset}, {(\big + \small) / 2}, 0) -- ++(\offset, 0, 0) node[above,midway] {\huge step};
+  \begin{scope}[shift={({\big + \offset * 3},0,0)}]
+    %% entity
+    \draw[black, line width=1mm] ({(\big - \small) / 2}, {\big - \change}, 0) rectangle ++(\small, \small, 0);
+    %% block
+    \draw[black, line width=1mm] (0, 0, 0) rectangle ++(\big, \big, 0);
+    %% axes
+    \draw[black!30!red, line width=0.5mm] (0, {\big - \change / 2}, 0) -- ++({(\big - \small) / 2}, 0, 0) node[midway,below] {\huge $x$};
+    \draw[black!40!green, line width=0.5mm] ({(\big + \small) / 2 + 0.2}, \big, 0) -- ++(0, {-\change}, 0) node[end,right] {\huge $y$};
+  \end{scope}
+{% endpgf %}
+</div>
 
 This case is the most common outcome. There are a handful of cases where the
 entity is on the edge of a block and the outcome is not clear. This could be
