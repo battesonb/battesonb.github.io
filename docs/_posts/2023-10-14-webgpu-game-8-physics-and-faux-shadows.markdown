@@ -2,6 +2,7 @@
 layout: post
 title:  "WebGPU game (#8): Physics and Faux Shadows"
 series: "WebGPU game"
+date:   2023-10-14
 categories: graphics
 tags: webgpu
 ---
@@ -227,7 +228,7 @@ The bulk of the implementation is in the update method. At a high-level, we
 first subtract the velocity on the $$y$$-axis by the amount of gravity configured
 for the body. We then divide the time step into a fixed number of smaller time
 steps. This allows for more precision in the simulation, particularly regarding
-the correctness of the collision axis mentioned early in this post.
+the correctness of the collision axis mentioned earlier in this post.
 
 For each time step, we iterate over all blocks in the terrain which could
 overlap with the player's AABB. We know this upfront because the terrain is not
@@ -291,9 +292,76 @@ update(ctx: UpdateContext): void {
 }
 ```
 
+You'll notice I called a non-existent method to generate the AABB for a given
+terrain block. This is achieved by determining the block coordinate and then
+mapping the coordinate to match the actual position of the block for the AABB.
+
+```ts
+getBlockAabb(coord: Vec3): Aabb | undefined {
+  const intCoord = coord.map(Math.floor);
+  const index = Terrain.index(intCoord.x, intCoord.y, intCoord.z);
+  if (index !== undefined) {
+    const block = this._blocks[index];
+    if (block != Block.Air) {
+      return new Aabb(intCoord.map(c => c + 0.5), Vec3.fill(1));
+    }
+  }
+  return undefined;
+}
+```
+
 ### Putting it all together
 
-TODO: Finish physics implementation
+With all of this in place, we can attach the body to our player in
+`src/entities/player.ts`:
+
+```ts
+export function newPlayer(world: World): Entity {
+  const transform = new Transform();
+  // move the player a little bit higher off the ground
+  transform.position.y = 8;
+  ...
+  return new Entity("player")
+      ...
+      .withComponent(new Body());
+}
+```
+
+Then, we can make changes to the player controller to move it via the body
+instead. We'll even add a jump action!
+
+```ts
+export class PlayerController extends Component {
+  private _speed: number = 4;
+  private _jumpSpeed = 5;
+  private _body?: Body;
+
+  ...
+
+  init(_: InitContext): void {
+    this._body = this.getComponent(Body);
+  }
+
+  update(ctx: UpdateContext): void {
+    ...
+    if (direction.magnitudeSquared() > 0.1) {
+      direction = direction.normal();
+
+      // this used to be a direct update to the transform
+      this._body!.velocity.x = this._speed * direction.x;
+      this._body!.velocity.z = this._speed * direction.y;
+    } else {
+      this._body!.velocity.x = 0;
+      this._body!.velocity.z = 0;
+    }
+
+    // let the player to jump if it's on the ground
+    if (input.keyDown(" ") && this._body!.onGround && this._body!.velocity.y <= 0) {
+      this._body!.velocity.y = this._jumpSpeed;
+    }
+  }
+}
+```
 
 ## Faux shadows
 
@@ -303,14 +371,149 @@ I really can't tell.
 
 Now, it's probably best to implement a shadow map[^4] to get the best results,
 but to minimize the complexity and time to finish this project I'm opting for a
-simple rectangle which renders a circle-like shape below the player. Grab the
-updated texture to ensure you have it too! My implementation is also not ideal
-as the shadow can "float" above the air. I think that the use of a stencil
-buffer[^5] on the $$y$$-up direction with unshaded cylinders would produce the
-best visual result, but this also makes the implementation a bit too big for a
-blog post.
+simple rectangle which renders a circle-like shape below the player. [Grab the
+updated
+texture](https://github.com/battesonb/webgpu-blog-game/tree/03b3b231c232f760cf174fef48d0f77a32d7f070/public)
+to ensure you have it too! My implementation is also not ideal as the shadow can
+"float" above the air. I think that the use of a stencil buffer[^5] on the
+$$y$$-up direction with unshaded cylinders would produce the best visual result,
+but this also makes the implementation a bit too big for a blog post.
 
-TODO complete shadow section
+We're going to model the shadows as standalone entities as they need to have
+have a position in the world, be rendered and have some specialized behaviour.
+We already have machinery in place for the first two, so we really just need to
+write the specialized `Shadow` component. I'm going to comment the reasoning
+in-line as it's a surprisingly simple component! Starting in a file under
+`src/components/shadow.ts`:
+
+```ts
+const MAX_DELTA = 5;
+
+export class Shadow extends Component {
+  private _transform?: Transform;
+  private _targetName: string;
+  maxScale: number;
+
+  constructor(targetName: string, maxScale: number) {
+    super();
+    this._targetName = targetName;
+    this.maxScale = maxScale;
+  }
+
+  init(_ctx: InitContext): void {
+    this._transform = this.getComponent(Transform);
+  }
+
+  update(ctx: UpdateContext): void {
+    const {world} = ctx;
+    const target = world.getByName(this._targetName);
+    const terrain = world.getByName("terrain")?.getComponent(Terrain);
+    // delete the shadow if the target no longer exists.
+    if (!target) {
+      world.removeEntity(this.entity.name);
+      return;
+    }
+
+    const targetPosition = target.getComponent(Transform)!.position;
+    this._transform!.position = targetPosition.clone();
+
+    const x = this._transform!.position.x;
+    const z = this._transform!.position.z;
+    // starting at the target's y position, work downards until we hit a non-air
+    // block
+    for (let j = Math.floor(this._transform!.position.y); j >= 0; j--) {
+      if (terrain!.getBlock(new Vec3(x, j, z))) {
+        // put the shadow slightly above the block to avoid z-fighting
+        this._transform!.position.y = j + 1.01;
+        break;
+      }
+    }
+
+    // scale the shadow (up to a limit) based on how far the target entity is
+    // from the ground/shadow.
+    const clamped = clamp(0, MAX_DELTA, targetPosition.y - this._transform!.position.y);
+    const ratio = (MAX_DELTA - clamped) / MAX_DELTA;
+    const halfScale = this.maxScale / 2;
+    this._transform!.scale = Vec3.fill(ratio * halfScale + halfScale);
+  }
+}
+```
+
+The world does not yet have the `removeEntity` method, so just add that:
+
+```ts
+removeEntity(name: string): boolean {
+  return this._entities.delete(name);
+}
+```
+
+Create a new file under the path `src/entities/shadow.ts` including all of our
+required components:
+
+```ts
+let shadowCount = 0;
+export function newShadow(world: World, targetName: string, maxScale: number = 0.8): Entity {
+  const transform = new Transform();
+  const texture = world.getResource(GpuResources)!.texture;
+  return new Entity(`shadow${++shadowCount}`)
+    .withComponent(transform)
+    .withComponent(new Shadow(targetName, maxScale))
+    .withComponent(new Mesh(upPlane(texture, 10)));
+}
+```
+
+This `upPlane` is a new vertex list that I've added to a file under
+`src/meshes.ts`. I've also moved the original `plane` function into this file.
+
+```ts
+export function plane(texture: GPUTexture, index: number) {
+  return [
+    new Vertex(new Vec3(-0.5, -0.5, 0), uvFromIndex(index, 0.0, 1.0, texture)),
+    new Vertex(new Vec3(0.5, -0.5, 0), uvFromIndex(index, 1.0, 1.0, texture)),
+    new Vertex(new Vec3(0.5, 0.5, 0), uvFromIndex(index, 1.0, 0.0, texture)),
+    new Vertex(new Vec3(-0.5, 0.5, 0), uvFromIndex(index, 0.0, 0.0, texture)),
+  ];
+}
+
+export function upPlane(texture: GPUTexture, index: number) {
+  return [
+    new Vertex(new Vec3(-0.5, 0, 0.5), uvFromIndex(index, 0.0, 1.0, texture)),
+    new Vertex(new Vec3(0.5, 0, 0.5), uvFromIndex(index, 1.0, 1.0, texture)),
+    new Vertex(new Vec3(0.5, 0, -0.5), uvFromIndex(index, 1.0, 0.0, texture)),
+    new Vertex(new Vec3(-0.5, 0, -0.5), uvFromIndex(index, 0.0, 0.0, texture)),
+  ];
+}
+```
+
+Lastly, we modify the signature of the player entities `newPlayer` method to
+include the shadow as a returned entity:
+
+```ts
+export function newPlayer(world: World): Entity[] {
+  const player = new Entity("player")
+    .withComponent(transform)
+    ...
+
+  const shadow = newShadow(world, "player");
+
+  return [player, shadow];
+}
+```
+
+This means we need to update the world initialization in the `main.ts` file:
+
+```
+world.addEntities(
+  newCamera(),
+  ...newPlayer(world),
+  newTerrain(),
+);
+```
+
+Finally, we end up with the following **beautiful** shadow (lalala I can't hear
+you telling me its ugly).
+
+![Player jumping with shadow](/assets/webgpu-game-8-physics-and-faux-shadows/jump-with-shadow.png){:.centered}
 
 ## Links
 
