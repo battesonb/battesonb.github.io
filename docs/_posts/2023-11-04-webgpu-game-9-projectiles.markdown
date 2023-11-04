@@ -181,7 +181,7 @@ It's actually a lot more extreme with our chosen near- and far-clipping planes
 You may be thinking about how we now map this position from NDC into
 world-space. Well, remember how our `viewProj` matrix takes a point from
 world-space to NDC? Well, sort of magically, you can invert the matrix to do so.
-It makes sense that the inverse matrix does this, but it still sort of blows
+It makes sense that the inverse matrix does this, but it still sort of blows my
 mind that it's possible. Great, we now have a mechanism to bridge the gap from
 2D to 3D!
 
