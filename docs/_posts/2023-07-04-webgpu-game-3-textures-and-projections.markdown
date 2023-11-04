@@ -627,7 +627,7 @@ const projection = new Projection(
   // choose a very small FOV to have a near-isometric look
   toRadians(35),
   0.1,
-  100
+  500
 );
 // pre-multiply our view and projection matrices once before rendering
 // this avoids the need to do the same multiplication for every vertex!
