@@ -129,12 +129,12 @@ $$
 $$
 
 The $$x$$ and $$y$$ coordinates can be mapped from some mouse position on our
-canvas, given we know the width and height of the canvas. Given a width, $$w$$
-and a height $$h$$:
+canvas, given we know the width and height of the canvas. Given a width, $$w$$,
+and a height, $$h$$:
 
 $$
 x_{\text{NDC}} = 2\left(\frac{x_{\text{screen}}}{w}\right) - 1 \\
-y_{\text{NDC}} = -\left(2\left(\frac{y_{\text{screen}}}{w}\right) - 1\right)
+y_{\text{NDC}} = -\left(2\left(\frac{y_{\text{screen}}}{h}\right) - 1\right)
 $$
 
 $$y$$ is negated because the canvas coordinates start from the top left, instead
@@ -418,7 +418,13 @@ export class Mat4 {
 </details></p>
 
 I'm waving my hands over a lot of maths here, so feel free to dive into the
-derivation and explanation for *why* the inverse is calculated this way.
+derivation and explanation for *why* the inverse is calculated this way. I
+didn't add it to this commit, but I also ran some spot-checked tests to ensure I
+didn't make a mistake. One important test is to multiply the `viewProj` and
+`viewProjInv` every frame and validate that they are (approximately) equal to
+the identity matrix. Thanks to floating-point precision limits, it won't be
+exact. Generally, I'd suggest some unit tests or debug assertions during
+integration testing.
 
 We've got our `viewProj` inverse now, so we just need to calculate the mouse
 position in world coordinates inside of the `Input`. The method of interest here
@@ -492,6 +498,7 @@ export class Input extends Resource {
     const mousePosition = new Vec4(this.mousePosition.x, this.mousePosition.y, 0, 1);
     const mouseWorldPosition = viewProjInv.mul(mousePosition);
 
+    // homogenous coordinates
     const x = mouseWorldPosition.x / mouseWorldPosition.w;
     const y = mouseWorldPosition.y / mouseWorldPosition.w;
     const z = mouseWorldPosition.z / mouseWorldPosition.w;
@@ -539,6 +546,7 @@ export class Input extends Resource {
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    // recall the equation for the x and y NDC coordinates from earlier
     const xRatio = x / rect.width;
     const yRatio = y / rect.height;
     this._mousePosition.x = (xRatio * 2 - 1);
@@ -742,7 +750,7 @@ if (input.mouseDown || input.keyDown("e")) {
 }
 ```
 
-And that's it, you should be able to fire bullets to your hearts content (at a
+And that's it, you should be able to fire bullets to your heart's content (at a
 rate of 5 per second)!
 
 ![Player shooting bullets](/assets/webgpu-game-9-projectiles/bullets.png){:.centered}
