@@ -85,7 +85,13 @@
 }
 
 embed {
-  filter: var(--embed-filter);
+  filter: var(--invert-filter);
+  width: 100%;
+  max-height: 66vh;
+}
+
+.invertible {
+  filter: var(--invert-filter);
   width: 100%;
   max-height: 66vh;
 }

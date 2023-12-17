@@ -20,7 +20,7 @@ $code-background:  #262222;
 $grey-color:       #828282 !default;
 $grey-color-light: lighten($grey-color, 40%) !default;
 $grey-color-dark:  darken($grey-color, 25%) !default;
-$embed-filter:     "";
+$invert-filter:     "";
 
 :root {
   --text-color:       #{$text-color};
@@ -30,7 +30,7 @@ $embed-filter:     "";
   --grey-color:       #{$grey-color};
   --grey-color-light: #{$grey-color-light};
   --grey-color-dark:  #{$grey-color-dark};
-  --embed-filter:     #{$embed-filter};
+  --invert-filter:     #{$invert-filter};
 }
 
 :root.dark {
@@ -42,7 +42,7 @@ $embed-filter:     "";
   --grey-color:       #b5b5b5;
   --grey-color-light: #ddd;
   --grey-color-dark:  #aaa;
-  --embed-filter:     invert(95%) hue-rotate(175deg) saturate(2);
+  --invert-filter:    invert(95%) hue-rotate(175deg) saturate(2);
 }
 
 $text-color: var(--text-color, #{$text-color});
@@ -53,7 +53,7 @@ $accent-color: var(--accent-color, #{$accent-color});
 $grey-color: var(--grey-color, #{$grey-color});
 $grey-color-light: var(--grey-color-light, #{$grey-color-light});
 $grey-color-dark: var(--grey-color-dark, #{$grey-color-dark});
-$embed-filter: var(--embed-filter, #{$embed-filter});
+$invert-filter: var(--invert-filter, #{$invert-filter});
 
 $table-text-align: left !default;
 
