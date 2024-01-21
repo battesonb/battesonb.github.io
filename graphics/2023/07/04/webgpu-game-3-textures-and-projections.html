@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>WebGPU game (#3): Textures and Projections | Byron’s Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="WebGPU game (#3): Textures and Projections" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="For this post, I would like to focus on getting (1) a texture mapped to a quad, and (2) the quad placed in 3-dimensional space." />
+<meta property="og:description" content="For this post, I would like to focus on getting (1) a texture mapped to a quad, and (2) the quad placed in 3-dimensional space." />
+<link rel="canonical" href="https://blog.batteson.com/graphics/2023/07/04/webgpu-game-3-textures-and-projections.html" />
+<meta property="og:url" content="https://blog.batteson.com/graphics/2023/07/04/webgpu-game-3-textures-and-projections.html" />
+<meta property="og:site_name" content="Byron’s Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="WebGPU game (#3): Textures and Projections" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-04T00:00:00+00:00","datePublished":"2023-07-04T00:00:00+00:00","description":"For this post, I would like to focus on getting (1) a texture mapped to a quad, and (2) the quad placed in 3-dimensional space.","headline":"WebGPU game (#3): Textures and Projections","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.batteson.com/graphics/2023/07/04/webgpu-game-3-textures-and-projections.html"},"url":"https://blog.batteson.com/graphics/2023/07/04/webgpu-game-3-textures-and-projections.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://blog.batteson.com/feed.xml" title="Byron's Blog" /></head>
+<body><header class="site-header" role="banner">
+  <script>const OVERRIDE_COLOR_SCHEME_KEY = "override-color-scheme";
+
+function systemScheme() {
+  if (window.matchMedia) {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+      return "light";
+    }
+  }
+  return null;
+}
+
+function localStorageScheme() {
+  const store = window.localStorage.getItem(OVERRIDE_COLOR_SCHEME_KEY);
+  switch (store) {
+  case "dark":
+    return "dark";
+  case "light":
+    return "light";
+  default:
+    return null;
+  }
+}
+
+function getEffectiveColorScheme() {
+  const scheme = localStorageScheme();
+  if (scheme) {
+    return scheme;
+  }
+  return systemScheme() ?? "light";
+}
+
+function toggleDomStyles(toggle, scheme) {
+  if (scheme == "dark") {
+    toggle.classList.add("enabled");
+    document.documentElement.classList.add("dark");
+  } else {
+    toggle.classList.remove("enabled");
+    document.documentElement.classList.remove("dark");
+  }
+}
+
+function init() {
+  const toggle = document.getElementById("color-scheme-toggle");
+  toggleDomStyles(toggle, getEffectiveColorScheme());
+  toggle.style.display = "";
+
+  toggle.addEventListener("click", () => {
+    const toggledScheme = getEffectiveColorScheme() == "dark" ? "light" : "dark";
+    window.localStorage.setItem(OVERRIDE_COLOR_SCHEME_KEY, toggledScheme);
+    console.log(toggledScheme);
+    toggleDomStyles(toggle, toggledScheme);
+  });
+
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", event => {
+    const newColorScheme = event.matches ? "dark" : "light";
+    localStorage.removeItem(OVERRIDE_COLOR_SCHEME_KEY);
+    toggleDomStyles(toggle, newColorScheme);
+  });
+}
+
+// Prevent start-up flash bang.
+if (getEffectiveColorScheme() == "dark") {
+  document.documentElement.classList.add("dark");
+} else {
+  document.documentElement.classList.remove("dark");
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Byron&#39;s Blog</a>
+
+    <div class="toggle-wrapper">
+      <div aria-label="Dark mode toggle" class="toggle" id="color-scheme-toggle" style="display: none;">
+        <div class="icons">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 39.319016 39.339096">
+  <g transform="translate(-55.96962,-5.914348)">
+    <path style="stroke-linecap:round;stroke-linejoin:round;paint-order:stroke markers fill" d="m 75.706175,5.9145455 c -0.46813,-0.00211 -0.936357,0.012689 -1.403532,0.044442 -0.934573,0.063571 -1.863148,0.1947352 -2.779159,0.3906739 -0.91589,0.1960373 -1.816773,0.4569633 -2.695442,0.7813476 -0.878744,0.324236 -1.732777,0.7100078 -2.556433,1.1560018 -0.823583,0.4459808 -1.613495,0.9513444 -2.365231,1.5099854 -0.751784,0.5587278 -1.462386,1.1698288 -2.127002,1.8298618 -0.664716,0.659966 -1.281858,1.367265 -1.845882,2.115117 -0.563861,0.747916 -1.073806,1.535378 -1.525488,2.355928 -0.451665,0.820669 -0.845378,1.672084 -1.175639,2.548682 h 0.0021 c -0.330339,0.876352 -0.598711,1.774801 -0.800985,2.689241 -0.202397,0.914588 -0.339623,1.843528 -0.409794,2.777609 -0.06995,0.934098 -0.07147,1.872003 -0.0078,2.806547 0.06361,0.934382 0.19268,1.863336 0.388607,2.779158 0.195766,0.915422 0.457365,1.817172 0.781347,2.695443 0.324276,0.878549 0.710017,1.732964 1.156002,2.556433 0.446127,0.823809 0.951138,1.613314 1.509985,2.36523 0.55873,0.751786 1.169829,1.462389 1.829863,2.127002 a 3.50035,3.50035 0 0 0 0,0.0021 c 0.659997,0.664523 1.367272,1.279977 2.115116,1.843816 0.747917,0.563861 1.534862,1.073805 2.355412,1.525488 0.820454,0.451817 1.672795,0.84518 2.549198,1.175639 0.876539,0.330379 1.774606,0.596657 2.689242,0.798917 0.914426,0.202167 1.843719,0.338251 2.777608,0.408244 0.934072,0.07011 1.869939,0.07492 2.80448,0.01137 a 3.50035,3.50035 0 0 0 0.0021,0 c 0.934573,-0.06357 1.863148,-0.194217 2.779159,-0.390157 0.91589,-0.196037 1.816771,-0.456963 2.695443,-0.781348 0.878744,-0.324234 1.732776,-0.710525 2.556433,-1.156518 0.823582,-0.445982 1.613495,-0.950827 2.36523,-1.509469 0.751783,-0.558728 1.462388,-1.170347 2.127002,-1.830379 a 3.50035,3.50035 0 0 0 0.0021,0 c 0.664556,-0.66018 1.279986,-1.367071 1.843815,-2.115117 0.563825,-0.747733 1.073796,-1.535059 1.525488,-2.355411 0.451858,-0.820638 0.843123,-1.672082 1.173572,-2.548682 0.330339,-0.876351 0.598711,-1.775317 0.800985,-2.689758 a 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 c 0.0042,-0.019 0.0094,-0.03783 0.01344,-0.05684 l 0.0021,-0.01188 c 0.0042,-0.01897 0.0078,-0.03735 0.01189,-0.05633 a 3.50035,3.50035 0 0 0 0.0036,-0.01602 c 0.004,-0.01898 0.008,-0.03734 0.01188,-0.05633 l 0.0016,-0.01188 c 0.004,-0.01898 0.008,-0.03734 0.01188,-0.05633 a 3.50035,3.50035 0 0 0 0.0041,-0.01395 c 0.0022,-0.01077 0.0035,-0.0223 0.0057,-0.03307 l 0.0041,-0.0217 c 10e-4,-0.0051 0.0026,-0.01035 0.0036,-0.0155 0.0023,-0.01093 0.0056,-0.02214 0.0078,-0.03307 a 3.50035,3.50035 0 0 0 0.0078,-0.04289 c 0.0037,-0.01901 0.0083,-0.03783 0.01189,-0.05684 l 0.0021,-0.01189 c 0.0032,-0.01637 0.0066,-0.0322 0.0098,-0.04858 l 0.0021,-0.0078 c 0.0039,-0.02042 0.0059,-0.04002 0.0098,-0.06046 a 3.50035,3.50035 0 0 0 0.0036,-0.01189 c 0.0038,-0.02027 0.0061,-0.04018 0.0098,-0.06046 l 0.0021,-0.0078 c 0.0038,-0.02045 0.0082,-0.04 0.01189,-0.06046 a 3.50035,3.50035 0 0 0 0.0021,-0.01395 c 0.0032,-0.01837 0.0066,-0.0364 0.0098,-0.05478 l 0.0021,-0.01344 c 0.0026,-0.01479 0.0052,-0.03016 0.0078,-0.04496 l 0.0016,-0.01188 c 0.0034,-0.01917 0.0064,-0.03715 0.0098,-0.05633 a 3.50035,3.50035 0 0 0 0.0021,-0.01395 c 0.0039,-0.02295 0.0081,-0.04524 0.01189,-0.06821 0.0035,-0.02062 0.0064,-0.0419 0.0098,-0.06253 a 3.50035,3.50035 0 0 0 0.0021,-0.01188 c 0.0031,-0.01919 0.0067,-0.03713 0.0098,-0.05633 l 0.0021,-0.01188 c 0.0031,-0.01919 0.0067,-0.03764 0.0098,-0.05684 a 3.50035,3.50035 0 0 0 0.0021,-0.01344 c 0.0034,-0.02233 0.0059,-0.04431 0.0093,-0.06666 v -0.0021 c 0.0034,-0.02254 0.0065,-0.04565 0.0098,-0.06821 a 3.50035,3.50035 0 0 0 0.0041,-0.01757 c 0.0033,-0.02318 0.0066,-0.04709 0.0098,-0.07028 0.0013,-0.009 0.0023,-0.01841 0.0036,-0.02739 a 3.50035,3.50035 0 0 0 0.0062,-0.04082 c 0.0031,-0.0232 0.0048,-0.04707 0.0078,-0.07028 v 0.01344 c 0.0031,-0.0232 0.0048,-0.04707 0.0078,-0.07028 v 0.01395 c 0.0031,-0.0232 0.0048,-0.04708 0.0078,-0.07028 a 3.50035,3.50035 0 0 0 0.0021,-0.01757 c 0.0024,-0.01933 0.0054,-0.03958 0.0078,-0.05891 l 0.0021,-0.01188 c 0.0019,-0.01523 0.0038,-0.02921 0.0057,-0.04444 l 0.0021,-0.01189 c 0.0024,-0.01933 0.0038,-0.03906 0.0062,-0.05839 a 3.50035,3.50035 0 0 0 0.0021,-0.01189 c 0.0028,-0.02323 0.0051,-0.04497 0.0078,-0.06821 a 3.50035,3.50035 0 0 0 0.0021,-0.01757 c 0.0021,-0.01934 0.0036,-0.03956 0.0057,-0.05891 l 0.0021,-0.01188 c 0.0018,-0.01662 0.0039,-0.03196 0.0057,-0.04858 v -0.0078 c 0.0023,-0.02085 0.004,-0.04167 0.0062,-0.06253 a 3.50035,3.50035 0 0 0 0.0021,-0.0078 c 0.0024,-0.02326 0.0055,-0.04702 0.0078,-0.07028 l -0.0021,0.0057 c 0.0017,-0.01728 0.004,-0.03335 0.0057,-0.05064 v -0.0021 c 0.0023,-0.0226 0.0039,-0.04354 0.0062,-0.06615 a 3.50035,3.50035 0 0 0 0.0036,-0.02584 c 0.0022,-0.02327 0.0041,-0.04493 0.0062,-0.06821 a 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 c 0.0017,-0.01999 0.004,-0.03892 0.0057,-0.05891 v -0.0098 c 0.0013,-0.01565 0.0028,-0.03086 0.0041,-0.04651 l 0.0016,-0.01395 c 0.0016,-0.01861 0.0026,-0.03616 0.0041,-0.05478 a 3.50035,3.50035 0 0 0 0.0021,-0.01912 c 0.0014,-0.01796 0.0023,-0.03475 0.0036,-0.05271 l 0.0021,-0.01602 v -0.0036 l 0.0021,-0.01964 v -0.01964 l 0.0021,-0.01964 a 3.50035,3.50035 0 0 0 0.0021,-0.03876 l 0.0021,-0.01395 a 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 l 0.0021,-0.02532 a 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 l 0.0016,-0.0155 a 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 l 0.0021,-0.02739 a 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0.0041,-0.05116 3.50035,3.50035 0 0 0 0.0021,-0.03876 v 0.02119 a 3.50035,3.50035 0 0 0 0.0021,-0.04082 3.50035,3.50035 0 0 0 0.0021,-0.03927 l 0.0015,-0.01912 v -0.01757 l 0.0021,-0.01964 v -0.01964 l 0.0021,-0.01964 a 3.50035,3.50035 0 0 0 0.0021,-0.0646 v -0.01137 a 3.50035,3.50035 0 0 0 -3.929476,-3.589962 h -0.0021 a 3.50035,3.50035 0 0 0 -2.396753,1.415934 c -0.166431,0.22891 -0.349245,0.446336 -0.538985,0.656291 -0.315992,0.320239 -0.656298,0.618452 -1.021644,0.881083 -0.377732,0.271558 -0.777675,0.508712 -1.196826,0.710551 -0.419091,0.201838 -0.854991,0.366472 -1.302763,0.492477 -0.447901,0.125939 -0.906458,0.211627 -1.369425,0.257865 a 3.50035,3.50035 0 0 0 0,0.0021 c -0.462829,0.04634 -0.928836,0.05022 -1.39268,0.0155 -0.463944,-0.03484 -0.923748,-0.109912 -1.374593,-0.224792 -0.450781,-0.114789 -0.890647,-0.267573 -1.314648,-0.458887 -0.426277,-0.191319 -0.832581,-0.419497 -1.21698,-0.681612 -0.384356,-0.262102 -0.744969,-0.557771 -1.077971,-0.882634 -0.333008,-0.324847 -0.636931,-0.679043 -0.908471,-1.056783 -0.271558,-0.377732 -0.511296,-0.778192 -0.713135,-1.197343 -0.201847,-0.419196 -0.36598,-0.85488 -0.49196,-1.302763 -0.125928,-0.447794 -0.211599,-0.903984 -0.257865,-1.366841 a 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 c -0.04635,-0.462937 -0.05232,-0.928729 -0.01757,-1.39268 0.03485,-0.463834 0.109938,-0.922304 0.224792,-1.373043 a 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 3.50035,3.50035 0 0 0 0,-5.16e-4 3.50035,3.50035 0 0 0 0,-5.17e-4 c 0.114778,-0.450893 0.267547,-0.890542 0.458887,-1.314648 0.191385,-0.423967 0.419521,-0.830618 0.681612,-1.214913 0.262095,-0.38447 0.557747,-0.744866 0.882634,-1.077971 0.312251,-0.320097 0.654693,-0.609386 1.015958,-0.872815 0.19844,-0.128683 0.400176,-0.25269 0.609265,-0.363285 a 3.50035,3.50035 0 0 0 -1.27295,-6.5741648 c -0.06175,-0.00646 -0.123708,-0.011694 -0.185518,-0.01757 a 3.50035,3.50035 0 0 0 -0.07028,-0.00568 c -0.466941,-0.03505 -0.934886,-0.054225 -1.403015,-0.056332 z M 88.290936,26.265758 a 3.50035,3.50035 0 0 0 0,0.0057 l -0.0021,0.0078 z"/>
+  </g>
+</svg>
+
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.62323 42.62479">
+  <g transform="translate(-3.9940714,-3.6876297)">
+    <path d="m 25.306465,3.6876302 a 3.5,3.5 0 0 0 -1.081587,0.171049 3.5,3.5 0 0 0 -0.975651,0.4971272 3.5,3.5 0 0 0 -0.774113,0.7746298 3.5,3.5 0 0 0 -0.497128,0.975651 3.5,3.5 0 0 0 -0.171565,1.0815877 v 4.3527061 a 13.959908,13.959908 0 0 1 1.075386,-0.288355 13.959908,13.959908 0 0 1 2.424142,-0.211873 v 0 a 13.959908,13.959908 0 0 1 0.842842,0.02532 13.959908,13.959908 0 0 1 0.839742,0.07648 13.959908,13.959908 0 0 1 0.833541,0.126608 13.959908,13.959908 0 0 1 0.824756,0.17725 13.959908,13.959908 0 0 1 0.15968,0.04444 V 7.1876749 A 3.5,3.5 0 0 0 28.781189,6.7654785 3.5,3.5 0 0 0 28.704708,6.35 3.5,3.5 0 0 0 28.579134,5.946407 3.5,3.5 0 0 0 28.405501,5.5609008 3.5,3.5 0 0 0 28.18691,5.1991658 3.5,3.5 0 0 0 27.926461,4.8663696 3.5,3.5 0 0 0 27.627771,4.5676798 3.5,3.5 0 0 0 27.294975,4.3072306 3.5,3.5 0 0 0 26.93324,4.0886393 3.5,3.5 0 0 0 26.547733,3.9150065 3.5,3.5 0 0 0 26.14414,3.7894328 3.5,3.5 0 0 0 25.728662,3.7129516 3.5,3.5 0 0 0 25.306465,3.6876302 Z" style="stroke-linecap:round;stroke-linejoin:round" />
+    <path style="stroke-linecap:round;stroke-linejoin:round" d="m 21.806421,38.459668 v 4.352706 c 8.2e-5,0.367296 0.05798,0.732295 0.171565,1.081587 0.113494,0.349284 0.281257,0.678532 0.497128,0.975651 0.215792,0.297229 0.477028,0.55864 0.774113,0.77463 0.297119,0.21587 0.626367,0.383633 0.975651,0.497127 0.34932,0.113411 0.714318,0.171134 1.081587,0.171049 0.36727,8.5e-5 0.732268,-0.05764 1.081588,-0.171049 0.349284,-0.113494 0.678532,-0.281257 0.975651,-0.497127 0.297268,-0.215948 0.558682,-0.477362 0.77463,-0.77463 0.21587,-0.297119 0.383633,-0.626367 0.497127,-0.975651 0.113411,-0.34932 0.171134,-0.714318 0.171049,-1.081587 v -4.352706 c -0.354824,0.110406 -0.71392,0.206602 -1.07642,0.288354 -0.800336,0.14105 -1.611471,0.211944 -2.424141,0.211874 -0.812671,7e-5 -1.623805,-0.07082 -2.424142,-0.211874 -0.362152,-0.08178 -0.720903,-0.177975 -1.075386,-0.288354 z" />
+    <path style="stroke-linecap:round;stroke-linejoin:round" d="m 13.281877,32.073494 -3.045293,3.045809 c -0.2599547,0.259594 -0.4774205,0.558501 -0.6444047,0.885734 -0.166806,0.327347 -0.2810324,0.67892 -0.3384806,1.041797 -0.057507,0.362915 -0.057507,0.732626 0,1.09554 0.057448,0.362877 0.1716746,0.714451 0.3384806,1.041797 0.1669381,0.327417 0.384406,0.626501 0.6444047,0.886251 0.259669,0.259588 0.558572,0.476702 0.885734,0.643372 0.327186,0.166754 0.678581,0.280979 1.041281,0.33848 0.362745,0.05745 0.732277,0.05745 1.095023,0 0.3627,-0.0575 0.714095,-0.171726 1.04128,-0.33848 0.327163,-0.16667 0.626065,-0.383784 0.885734,-0.643372 l 3.046326,-3.046326 c -0.668823,-0.389953 -1.304055,-0.834875 -1.899109,-1.330151 -0.299172,-0.274161 -0.586251,-0.56124 -0.860413,-0.860413 -0.299172,-0.274161 -0.586251,-0.56124 -0.860412,-0.860412 -0.4953,-0.595219 -0.940222,-1.230625 -1.330151,-1.899626 z" />
+    <path style="stroke-linecap:round;stroke-linejoin:round" d="m 7.4941162,21.499979 c -0.3672974,8.3e-5 -0.7322949,0.05798 -1.0815878,0.171566 -0.3492843,0.113494 -0.6785311,0.281257 -0.975651,0.497128 -0.2970451,0.215834 -0.5582787,0.477067 -0.7741129,0.774112 -0.2158708,0.29712 -0.3836332,0.626367 -0.4971273,0.975652 -0.1135863,0.349292 -0.1714836,0.71429 -0.1715658,1.081587 8.22e-5,0.367298 0.05798,0.732295 0.1715658,1.081588 0.1134941,0.349284 0.2812565,0.678531 0.4971273,0.975651 0.2158342,0.297045 0.4770678,0.558279 0.7741129,0.774113 0.2971199,0.215871 0.6263667,0.383633 0.975651,0.497127 0.3492929,0.113586 0.7142904,0.171484 1.0815878,0.171566 h 4.3521888 c -0.110393,-0.354655 -0.206588,-0.713576 -0.288354,-1.075903 -0.14105,-0.800338 -0.211944,-1.61147 -0.211874,-2.424142 -7e-5,-0.812672 0.07082,-1.623803 0.211874,-2.424141 0.08177,-0.362327 0.177961,-0.721249 0.288354,-1.075904 z" />
+    <path d="m 13.281877,17.926554 a 13.959908,13.959908 0 0 1 1.330151,-1.899625 13.959908,13.959908 0 0 1 0.860412,-0.860413 v 0 a 13.959908,13.959908 0 0 1 0.860413,-0.860413 13.959908,13.959908 0 0 1 1.899109,-1.330151 L 15.185636,9.9296264 A 3.5,3.5 0 0 0 14.460616,9.373588 3.5,3.5 0 0 0 13.61674,9.0237385 3.5,3.5 0 0 0 12.710852,8.904366 3.5,3.5 0 0 0 11.804964,9.0237385 3.5,3.5 0 0 0 10.961088,9.373588 3.5,3.5 0 0 0 10.236584,9.9296264 3.5,3.5 0 0 0 9.5921793,10.815877 a 3.5,3.5 0 0 0 -0.3384806,1.041797 3.5,3.5 0 0 0 0,1.09554 3.5,3.5 0 0 0 0.3384806,1.041797 3.5,3.5 0 0 0 0.6444047,0.885734 z" style="stroke-linecap:round;stroke-linejoin:round" />
+    <path d="m 37.330021,32.074011 a 13.959908,13.959908 0 0 1 -1.330151,1.899109 13.959908,13.959908 0 0 1 -0.860413,0.860412 v 0 a 13.959908,13.959908 0 0 1 -0.860413,0.860413 13.959908,13.959908 0 0 1 -1.898592,1.329635 l 3.045292,3.046842 a 3.5,3.5 0 0 0 0.885734,0.643372 3.5,3.5 0 0 0 1.041281,0.33848 3.5,3.5 0 0 0 1.095023,0 3.5,3.5 0 0 0 1.04128,-0.33848 3.5,3.5 0 0 0 0.885734,-0.643372 3.5,3.5 0 0 0 0.280603,-0.31626 3.5,3.5 0 0 0 0.240296,-0.348299 3.5,3.5 0 0 0 0.19637,-0.374137 3.5,3.5 0 0 0 0.150379,-0.395325 3.5,3.5 0 0 0 0.100769,-0.410311 3.5,3.5 0 0 0 0.05116,-0.420129 3.5,3.5 0 0 0 0,-0.422713 3.5,3.5 0 0 0 -0.05116,-0.419613 3.5,3.5 0 0 0 -0.100769,-0.410311 3.5,3.5 0 0 0 -0.150379,-0.395325 3.5,3.5 0 0 0 -0.19637,-0.374654 3.5,3.5 0 0 0 -0.240296,-0.347782 3.5,3.5 0 0 0 -0.280603,-0.31626 z" style="stroke-linecap:round;stroke-linejoin:round" />
+    <path d="m 38.815718,21.499979 a 13.959908,13.959908 0 0 1 0.04444,0.159164 13.959908,13.959908 0 0 1 0.17725,0.824756 13.959908,13.959908 0 0 1 0.126607,0.833541 13.959908,13.959908 0 0 1 0.07648,0.839742 13.959908,13.959908 0 0 1 0.02532,0.842842 v 0 a 13.959908,13.959908 0 0 1 -0.211873,2.424142 13.959908,13.959908 0 0 1 -0.288355,1.075903 h 4.351672 a 3.5,3.5 0 0 0 1.081588,-0.171566 3.5,3.5 0 0 0 0.975651,-0.497127 3.5,3.5 0 0 0 0.774113,-0.774113 3.5,3.5 0 0 0 0.497127,-0.975651 3.5,3.5 0 0 0 0.171566,-1.081588 3.5,3.5 0 0 0 -0.02584,-0.421679 3.5,3.5 0 0 0 -0.07596,-0.415996 3.5,3.5 0 0 0 -0.125574,-0.403593 3.5,3.5 0 0 0 -0.173633,-0.385506 3.5,3.5 0 0 0 -0.218591,-0.361735 3.5,3.5 0 0 0 -0.260966,-0.332279 3.5,3.5 0 0 0 -0.29869,-0.299207 3.5,3.5 0 0 0 -0.332796,-0.260449 3.5,3.5 0 0 0 -0.361735,-0.218591 3.5,3.5 0 0 0 -0.38499,-0.173633 3.5,3.5 0 0 0 -0.403593,-0.125574 3.5,3.5 0 0 0 -0.415995,-0.07648 3.5,3.5 0 0 0 -0.42168,-0.02532 z" style="stroke-linecap:round;stroke-linejoin:round" />
+    <path d="m 32.384586,12.972335 a 13.959908,13.959908 0 0 1 0.143144,0.08113 13.959908,13.959908 0 0 1 0.708484,0.457853 13.959908,13.959908 0 0 1 0.679028,0.499711 13.959908,13.959908 0 0 1 0.648023,0.540019 13.959908,13.959908 0 0 1 0.613916,0.577742 v 0 a 13.959908,13.959908 0 0 1 0.577742,0.613916 13.959908,13.959908 0 0 1 0.540019,0.648023 13.959908,13.959908 0 0 1 0.499711,0.679028 13.959908,13.959908 0 0 1 0.457853,0.708484 13.959908,13.959908 0 0 1 0.08113,0.144177 l 3.041158,-3.041675 a 3.5,3.5 0 0 0 0.280603,-0.316259 3.5,3.5 0 0 0 0.240296,-0.347783 3.5,3.5 0 0 0 0.19637,-0.374654 3.5,3.5 0 0 0 0.150379,-0.395325 3.5,3.5 0 0 0 0.100769,-0.410311 3.5,3.5 0 0 0 0.05116,-0.419612 3.5,3.5 0 0 0 0,-0.422713 3.5,3.5 0 0 0 -0.05116,-0.42013 3.5,3.5 0 0 0 -0.100769,-0.410311 3.5,3.5 0 0 0 -0.150379,-0.395324 3.5,3.5 0 0 0 -0.19637,-0.374138 A 3.5,3.5 0 0 0 40.655399,10.245886 3.5,3.5 0 0 0 40.374796,9.9296264 3.5,3.5 0 0 0 39.650293,9.373588 3.5,3.5 0 0 0 38.806417,9.0237385 3.5,3.5 0 0 0 37.900529,8.904366 3.5,3.5 0 0 0 36.994641,9.0237385 3.5,3.5 0 0 0 36.150765,9.373588 3.5,3.5 0 0 0 35.425744,9.9296264 Z" style="stroke-linecap:round;stroke-linejoin:round" />
+    <circle style="stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none" id="path1-9" cx="25.305944" cy="25" r="10.515897"/>
+  </g>
+</svg>
+
+        </div>
+      </div>
+    </div><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/archives/">Archives</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <link rel="stylesheet" href="/assets/katex.min.css" />
+
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">WebGPU game (#3): Textures and Projections</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-07-04T00:00:00+00:00" itemprop="datePublished">Jul 4, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>For this post, I would like to focus on getting (1) a texture mapped to a quad,
+and (2) the quad placed in 3-dimensional space.</p>
+
+<h2 id="texture">Texture</h2>
+
+<p>I have added a very simple “programmer art”<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote" rel="footnote">1</a></sup> tileset to the repository. Feel
+free to grab the tileset from the link to the <a href="#links">Git tree</a> below. Simply
+add this file to the <code class="language-plaintext highlighter-rouge">public</code> folder.</p>
+
+<p>Now, let’s start by writing a function to load this image into memory. Create a
+file named <code class="language-plaintext highlighter-rouge">texture.ts</code>.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="k">async</span> <span class="kd">function</span> <span class="nx">webGpuTextureFromUrl</span><span class="p">(</span><span class="nx">device</span><span class="p">:</span> <span class="nx">GPUDevice</span><span class="p">,</span> <span class="nx">url</span><span class="p">:</span> <span class="kr">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">GPUTexture</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">blob</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span> <span class="o">=&gt;</span> <span class="nx">res</span><span class="p">.</span><span class="nx">blob</span><span class="p">());</span>
+  <span class="kd">const</span> <span class="nx">imageBitmap</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">createImageBitmap</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
+
+  <span class="kd">const</span> <span class="na">textureDescriptor</span><span class="p">:</span> <span class="nx">GPUTextureDescriptor</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">label</span><span class="p">:</span> <span class="s2">`texture(</span><span class="p">${</span><span class="nx">url</span><span class="p">}</span><span class="s2">)`</span><span class="p">,</span>
+    <span class="na">size</span><span class="p">:</span> <span class="p">{</span> <span class="na">width</span><span class="p">:</span> <span class="nx">imageBitmap</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="na">height</span><span class="p">:</span> <span class="nx">imageBitmap</span><span class="p">.</span><span class="nx">height</span> <span class="p">},</span>
+    <span class="na">usage</span><span class="p">:</span> <span class="nx">GPUTextureUsage</span><span class="p">.</span><span class="nx">TEXTURE_BINDING</span> <span class="o">|</span>
+      <span class="nx">GPUTextureUsage</span><span class="p">.</span><span class="nx">COPY_DST</span> <span class="o">|</span>
+      <span class="nx">GPUTextureUsage</span><span class="p">.</span><span class="nx">RENDER_ATTACHMENT</span><span class="p">,</span>
+    <span class="na">format</span><span class="p">:</span> <span class="dl">"</span><span class="s2">rgba8unorm</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">};</span>
+
+  <span class="kd">const</span> <span class="nx">texture</span> <span class="o">=</span> <span class="nx">device</span><span class="p">.</span><span class="nx">createTexture</span><span class="p">(</span><span class="nx">textureDescriptor</span><span class="p">);</span>
+  <span class="nx">device</span><span class="p">.</span><span class="nx">queue</span><span class="p">.</span><span class="nx">copyExternalImageToTexture</span><span class="p">(</span>
+    <span class="p">{</span> <span class="na">source</span><span class="p">:</span> <span class="nx">imageBitmap</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="nx">texture</span> <span class="p">},</span>
+    <span class="nx">textureDescriptor</span><span class="p">.</span><span class="nx">size</span>
+  <span class="p">);</span>
+
+  <span class="k">return</span> <span class="nx">texture</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>From the above, we’re using <code class="language-plaintext highlighter-rouge">fetch</code> to obtain textures, which are served from
+the <code class="language-plaintext highlighter-rouge">public</code> directory in our project. We create a <code class="language-plaintext highlighter-rouge">GPUTextureDescriptor</code> which
+specifies the width, height, usage and format of the texture. We then allocate
+the space on our GPU for the texture with our handle to the <code class="language-plaintext highlighter-rouge">GPUDevice</code>. Lastly,
+we submit a command to the queue to copy the bytes from our source in memory to
+the GPU.</p>
+
+<p>While we’re in this file, we will want to specify a helper method for
+determining the UV coordinates for each vertex. These are the floating-point
+values that range from <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">]</span></span></span></span> in both the <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span> (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi></mrow><annotation encoding="application/x-tex">u</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">u</span></span></span></span>) and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi></mrow><annotation encoding="application/x-tex">y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span></span> (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span></span></span></span>)
+axes. It’s important to note that for texture coordinates, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi></mrow><annotation encoding="application/x-tex">u</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">u</span></span></span></span> increases to
+the right and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span></span></span></span> increases downwards.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">TILE_SIZE</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">uvFromIndex</span><span class="p">(</span><span class="nx">index</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">x</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">y</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">texture</span><span class="p">:</span> <span class="nx">GPUTexture</span><span class="p">):</span> <span class="p">[</span><span class="kr">number</span><span class="p">,</span> <span class="kr">number</span><span class="p">]</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">i</span> <span class="o">=</span> <span class="p">((</span><span class="nx">index</span> <span class="o">*</span> <span class="nx">TILE_SIZE</span><span class="p">)</span> <span class="o">%</span> <span class="nx">texture</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span> <span class="o">/</span> <span class="nx">texture</span><span class="p">.</span><span class="nx">width</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">[</span><span class="nx">i</span> <span class="o">+</span> <span class="p">(</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">TILE_SIZE</span><span class="p">)</span> <span class="o">/</span> <span class="nx">texture</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">y</span> <span class="o">*</span> <span class="nx">TILE_SIZE</span> <span class="o">/</span> <span class="nx">texture</span><span class="p">.</span><span class="nx">height</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We can just assume that all tiles have dimensions of 8x8, and that the texture
+atlas<sup id="fnref:2" role="doc-noteref"><a href="#fn:2" class="footnote" rel="footnote">2</a></sup> is just a single row. The index specifies which tile we want in the
+texture, while the <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi></mrow><annotation encoding="application/x-tex">y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span></span> coordinates specify the point within that
+tile.</p>
+
+<p>Now, in our <code class="language-plaintext highlighter-rouge">main.ts</code> file we load and hold onto a handle to the GPU texture. In
+essence, we allow the file loaded in RAM to be cleaned up by garbage collection,
+as we only need this data on the GPU.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">texture</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">webGpuTextureFromUrl</span><span class="p">(</span><span class="nx">device</span><span class="p">,</span> <span class="dl">"</span><span class="s2">./tileset.png</span><span class="dl">"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>We need to update the vertices to define a quad and include the desired UV
+coordinates. I want the fourth tile (the side of the grass block), which is at
+index 3. Note how the first vertex, representing the bottom-left, has a UV
+coordinate of (0, 1).</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">vertices</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Float32Array</span><span class="p">([</span>
+  <span class="c1">// x, y, u, v</span>
+  <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+  <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+  <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+  <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+<span class="p">]);</span>
+</code></pre></div></div>
+
+<p>Update the indices array to include the second triangle for the quad.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">indices</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Uint32Array</span><span class="p">([</span>
+  <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span>
+<span class="p">]);</span>
+</code></pre></div></div>
+
+<p>This has changed the structure of each vertex, so we need to update the vertex
+buffer layout.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">vertexBufferLayout</span><span class="p">:</span> <span class="nx">GPUVertexBufferLayout</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">stepMode</span><span class="p">:</span> <span class="dl">"</span><span class="s2">vertex</span><span class="dl">"</span><span class="p">,</span>
+  <span class="c1">// new array stride, since the vertices are bigger by 8 bytes.</span>
+  <span class="na">arrayStride</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+  <span class="na">attributes</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span> <span class="c1">// pos</span>
+      <span class="na">format</span><span class="p">:</span> <span class="dl">"</span><span class="s2">float32x2</span><span class="dl">"</span><span class="p">,</span>
+      <span class="na">offset</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="na">shaderLocation</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="c1">// new attribute, the UV coordinate for this vertex.</span>
+    <span class="p">{</span> <span class="c1">// uv</span>
+      <span class="na">format</span><span class="p">:</span> <span class="dl">"</span><span class="s2">float32x2</span><span class="dl">"</span><span class="p">,</span>
+      <span class="na">offset</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+      <span class="na">shaderLocation</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>We also need to specify a bind group layout. Bind groups are use to specify
+related data. These could be anything from opaque buffers, structs of primitive
+values, or textures.</p>
+
+<p>You can also switch bind groups between compute or render passes to persist the
+results from previous passes and use them in the following passes. For our
+purposes, we will always use this one bind group for every render pass.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">bindGroupLayout</span> <span class="o">=</span> <span class="nx">device</span><span class="p">.</span><span class="nx">createBindGroupLayout</span><span class="p">({</span>
+  <span class="na">label</span><span class="p">:</span> <span class="dl">"</span><span class="s2">bind group layout</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">entries</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="na">binding</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="na">visibility</span><span class="p">:</span> <span class="nx">GPUShaderStage</span><span class="p">.</span><span class="nx">FRAGMENT</span><span class="p">,</span>
+      <span class="na">texture</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="na">binding</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="na">visibility</span><span class="p">:</span> <span class="nx">GPUShaderStage</span><span class="p">.</span><span class="nx">FRAGMENT</span><span class="p">,</span>
+      <span class="na">sampler</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>I have specified that the first binding is a texture and the second is a
+sampler. You can think of the sampler as a configuration object that just
+indicates how to pick data from the texture. Specifically, textures are usually
+not sampled exactly on a pixel but somewhere between pixels. This means that
+there are methods for interpolating (often causing a blurry appearance at low
+resolutions). For our purposes, we are opting for nearest-pixel interpolation,
+which is essentially no interpolation.</p>
+
+<p>First update the pipeline layout to include the bind group layout:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">pipelineLayout</span> <span class="o">=</span> <span class="nx">device</span><span class="p">.</span><span class="nx">createPipelineLayout</span><span class="p">({</span>
+  <span class="na">label</span><span class="p">:</span> <span class="dl">"</span><span class="s2">pipeline layout</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">bindGroupLayouts</span><span class="p">:</span> <span class="p">[</span><span class="nx">bindGroupLayout</span><span class="p">],</span> <span class="c1">// updated</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>We then create the actual sampler, view and bind group. The view can be thought
+as some subset of the data contained within the texture. For example, mip refers
+to mipmaps<sup id="fnref:3" role="doc-noteref"><a href="#fn:3" class="footnote" rel="footnote">3</a></sup> which are successively scaled down versions of the original
+texture. These reduce noise for fragments in the distance based on sampling
+error without introducing an increased rendering cost. We won’t be making use of
+mipmaps.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">sampler</span> <span class="o">=</span> <span class="nx">device</span><span class="p">.</span><span class="nx">createSampler</span><span class="p">({</span>
+  <span class="c1">// note that we're just grabbing the "nearest" pixel,</span>
+  <span class="c1">// rather than interpolating</span>
+  <span class="na">minFilter</span><span class="p">:</span> <span class="dl">"</span><span class="s2">nearest</span><span class="dl">"</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="kd">const</span> <span class="nx">view</span> <span class="o">=</span> <span class="nx">texture</span><span class="p">.</span><span class="nx">createView</span><span class="p">({</span>
+  <span class="na">baseMipLevel</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="na">mipLevelCount</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="kd">const</span> <span class="nx">bindGroup</span> <span class="o">=</span> <span class="nx">device</span><span class="p">.</span><span class="nx">createBindGroup</span><span class="p">({</span>
+  <span class="na">label</span><span class="p">:</span> <span class="dl">"</span><span class="s2">bind group</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">layout</span><span class="p">:</span> <span class="nx">bindGroupLayout</span><span class="p">,</span>
+  <span class="na">entries</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="na">binding</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="na">resource</span><span class="p">:</span> <span class="nx">view</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="na">binding</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="na">resource</span><span class="p">:</span> <span class="nx">sampler</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">],</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>In our render pass, we must remember to actually set the bind group (as group
+zero):</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">pass</span><span class="p">.</span><span class="nx">setBindGroup</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">bindGroup</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Finally, we need to update our shader to account for the new vertex attribute
+and the bind group. Of course, we must also include actual sampling of the
+texture and apply it in the fragment shader.</p>
+
+<p>First, the new UV attribute:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">VertexInput</span> <span class="p">{</span>
+  <span class="o">@</span><span class="nf">location</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">pos</span><span class="p">:</span> <span class="n">vec2f</span><span class="p">,</span>
+  <span class="o">@</span><span class="nf">location</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="n">uv</span><span class="p">:</span> <span class="n">vec2f</span><span class="p">,</span> <span class="c1">// new</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">VertexOutput</span> <span class="p">{</span>
+  <span class="o">@</span><span class="nf">builtin</span><span class="p">(</span><span class="n">position</span><span class="p">)</span> <span class="n">clip_pos</span><span class="p">:</span> <span class="n">vec4f</span><span class="p">,</span>
+  <span class="o">@</span><span class="nf">location</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">uv</span><span class="p">:</span> <span class="n">vec2f</span><span class="p">,</span> <span class="c1">// new</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Next, we specify the bindings for our bind group – the texture view and
+sampler.</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="nf">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">@</span><span class="nf">binding</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">var</span> <span class="n">textureView</span><span class="p">:</span> <span class="n">texture_2d</span><span class="o">&lt;</span><span class="nb">f32</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="o">@</span><span class="nf">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">@</span><span class="nf">binding</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="n">var</span> <span class="n">textureSampler</span><span class="p">:</span> <span class="n">sampler</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>We can replace the vertex shader for the rainbow triangle with the following.
+Right now, nothing special is happening in the vertex shader. We’re essentially
+just passing through the inputs to the fragment shader after rephrasing the
+input position (2D) as a clip space position (4D).</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">vertex</span>
+<span class="k">fn</span> <span class="nf">vertexMain</span><span class="p">(</span><span class="k">in</span><span class="p">:</span> <span class="n">VertexInput</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="n">VertexOutput</span> <span class="p">{</span>
+  <span class="n">var</span> <span class="n">output</span><span class="p">:</span> <span class="n">VertexOutput</span><span class="p">;</span>
+  <span class="n">output</span><span class="py">.clip_pos</span> <span class="o">=</span> <span class="nf">vec4f</span><span class="p">(</span><span class="k">in</span><span class="py">.pos</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="n">output</span><span class="py">.uv</span> <span class="o">=</span> <span class="k">in</span><span class="py">.uv</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">output</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We then use the builtin <code class="language-plaintext highlighter-rouge">textureSample</code> function<sup id="fnref:4" role="doc-noteref"><a href="#fn:4" class="footnote" rel="footnote">4</a></sup> which grabs the nearest value
+of the input texture at the given floating-point coordinate.</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="n">fragment</span>
+<span class="k">fn</span> <span class="nf">fragmentMain</span><span class="p">(</span><span class="k">in</span><span class="p">:</span> <span class="n">VertexOutput</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="o">@</span><span class="nf">location</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">vec4f</span> <span class="p">{</span>
+  <span class="k">let</span> <span class="n">color</span> <span class="o">=</span> <span class="nf">textureSample</span><span class="p">(</span><span class="n">textureView</span><span class="p">,</span> <span class="n">textureSampler</span><span class="p">,</span> <span class="k">in</span><span class="py">.uv</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nf">vec4</span><span class="p">(</span><span class="n">color</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>You should end up with the following result:</p>
+
+<p><img src="/assets/webgpu-game-3-textures-and-projections/texture-complete.png" alt="Rendered with texture" class="centered" /></p>
+
+<h2 id="projections">Projections</h2>
+
+<p>I thought I would squeeze the projection work into this post, since the texture
+additions were quite minimal. If you haven’t, or you’re not comfortable with the
+MVP transformation matrix, I’d recommend going through my <a href="/graphics/2023/06/21/3d-projection-intro-model-and-view.html">3D projection</a> series. I won’t be
+explaining the <em>why</em> of the matrices I use here. You can really think of
+matrices as compressed maths operations, which means that they are explicitly
+hard to interpret just through observation (at least for this mere mortal).</p>
+
+<h3 id="maths-module">Maths module</h3>
+
+<p>We’re going to need some basic data types for representing common mathematical
+constructs. I have opted to create a <code class="language-plaintext highlighter-rouge">math</code> directory. Inside this directory
+we’ll need a <code class="language-plaintext highlighter-rouge">vec3.ts</code>, <code class="language-plaintext highlighter-rouge">vec4.ts</code> and <code class="language-plaintext highlighter-rouge">mat4.ts</code> file.</p>
+
+<p>For <code class="language-plaintext highlighter-rouge">vec3.ts</code>, we need the following:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * A 3-dimensional vector.
+ */</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">Vec3</span> <span class="p">{</span>
+  <span class="cm">/**
+   * Internal representation of the vector components.
+   */</span>
+  <span class="nl">rep</span><span class="p">:</span> <span class="p">[</span><span class="kr">number</span><span class="p">,</span> <span class="kr">number</span><span class="p">,</span> <span class="kr">number</span><span class="p">];</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">x</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">y</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">z</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rep</span> <span class="o">=</span> <span class="p">[</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">z</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="kd">get</span> <span class="nx">x</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rep</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="kd">get</span> <span class="nx">y</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rep</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="kd">get</span> <span class="nx">z</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rep</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="kd">set</span> <span class="nx">x</span><span class="p">(</span><span class="nx">value</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rep</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">set</span> <span class="nx">y</span><span class="p">(</span><span class="nx">value</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rep</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">set</span> <span class="nx">z</span><span class="p">(</span><span class="nx">value</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rep</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">dot</span><span class="p">(</span><span class="nx">other</span><span class="p">:</span> <span class="nx">Vec3</span><span class="p">):</span> <span class="kr">number</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">z</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">cross</span><span class="p">(</span><span class="nx">other</span><span class="p">:</span> <span class="nx">Vec3</span><span class="p">):</span> <span class="nx">Vec3</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Vec3</span><span class="p">(</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">z</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">z</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">other</span><span class="p">.</span><span class="nx">x</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>I use the array representation internally so that I can use indexing operations,
+since I don’t think JavaScript has support for operator overloading on the index
+operation. Otherwise, the most important part of this implementation are the dot
+and cross products. These are used extensively in the derivation of the view
+matrix.</p>
+
+<p>I’ll omit the <code class="language-plaintext highlighter-rouge">Vec4</code> implementation, but it’s essentially the same minus the
+cross product. I’ve named the fourth component <code class="language-plaintext highlighter-rouge">w</code>.</p>
+
+<p>Lastly, for the math module, we have the matrix implementation:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span><span class="nx">Vec4</span><span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">./vec4</span><span class="dl">"</span><span class="p">;</span>
+
+<span class="cm">/**
+ * A 4x4 square matrix.
+ */</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">Mat4</span> <span class="p">{</span>
+  <span class="nl">rows</span><span class="p">:</span> <span class="p">[</span><span class="nx">Vec4</span><span class="p">,</span> <span class="nx">Vec4</span><span class="p">,</span> <span class="nx">Vec4</span><span class="p">,</span> <span class="nx">Vec4</span><span class="p">];</span>
+
+  <span class="kd">constructor</span><span class="p">(</span>
+    <span class="nx">r0c0</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r0c1</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r0c2</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r0c3</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">r1c0</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r1c1</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r1c2</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r1c3</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">r2c0</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r2c1</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r2c2</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r2c3</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">r3c0</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r3c1</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r3c2</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span> <span class="nx">r3c3</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+  <span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rows</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="k">new</span> <span class="nx">Vec4</span><span class="p">(</span><span class="nx">r0c0</span><span class="p">,</span> <span class="nx">r0c1</span><span class="p">,</span> <span class="nx">r0c2</span><span class="p">,</span> <span class="nx">r0c3</span><span class="p">),</span>
+      <span class="k">new</span> <span class="nx">Vec4</span><span class="p">(</span><span class="nx">r1c0</span><span class="p">,</span> <span class="nx">r1c1</span><span class="p">,</span> <span class="nx">r1c2</span><span class="p">,</span> <span class="nx">r1c3</span><span class="p">),</span>
+      <span class="k">new</span> <span class="nx">Vec4</span><span class="p">(</span><span class="nx">r2c0</span><span class="p">,</span> <span class="nx">r2c1</span><span class="p">,</span> <span class="nx">r2c2</span><span class="p">,</span> <span class="nx">r2c3</span><span class="p">),</span>
+      <span class="k">new</span> <span class="nx">Vec4</span><span class="p">(</span><span class="nx">r3c0</span><span class="p">,</span> <span class="nx">r3c1</span><span class="p">,</span> <span class="nx">r3c2</span><span class="p">,</span> <span class="nx">r3c3</span><span class="p">),</span>
+    <span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="nx">row</span><span class="p">(</span><span class="nx">index</span><span class="p">:</span> <span class="kr">number</span><span class="p">):</span> <span class="nx">Vec4</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
+  <span class="p">}</span>
+
+  <span class="nx">column</span><span class="p">(</span><span class="nx">index</span><span class="p">:</span> <span class="kr">number</span><span class="p">):</span> <span class="nx">Vec4</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Vec4</span><span class="p">(</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">rep</span><span class="p">[</span><span class="nx">index</span><span class="p">],</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">rep</span><span class="p">[</span><span class="nx">index</span><span class="p">],</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">rep</span><span class="p">[</span><span class="nx">index</span><span class="p">],</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="nx">rep</span><span class="p">[</span><span class="nx">index</span><span class="p">],</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * Converts this matrix into a column-major buffer for WebGPU.
+   */</span>
+  <span class="nx">buffer</span><span class="p">():</span> <span class="nb">Float32Array</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nb">Float32Array</span><span class="p">([</span>
+      <span class="p">...</span><span class="k">this</span><span class="p">.</span><span class="nx">column</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">rep</span><span class="p">,</span>
+      <span class="p">...</span><span class="k">this</span><span class="p">.</span><span class="nx">column</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">rep</span><span class="p">,</span>
+      <span class="p">...</span><span class="k">this</span><span class="p">.</span><span class="nx">column</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">rep</span><span class="p">,</span>
+      <span class="p">...</span><span class="k">this</span><span class="p">.</span><span class="nx">column</span><span class="p">(</span><span class="mi">3</span><span class="p">).</span><span class="nx">rep</span><span class="p">,</span>
+    <span class="p">]);</span>
+  <span class="p">}</span>
+
+  <span class="nx">mul</span><span class="p">(</span><span class="nx">other</span><span class="p">:</span> <span class="nx">Mat4</span><span class="p">):</span> <span class="nx">Mat4</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">Mat4</span><span class="p">.</span><span class="nx">zero</span><span class="p">();</span>
+      <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">j</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">result</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">rep</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">row</span><span class="p">(</span><span class="nx">i</span><span class="p">).</span><span class="nx">dot</span><span class="p">(</span><span class="nx">other</span><span class="p">.</span><span class="nx">column</span><span class="p">(</span><span class="nx">j</span><span class="p">));</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+
+      <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">static</span> <span class="nx">zero</span><span class="p">():</span> <span class="nx">Mat4</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Mat4</span><span class="p">(</span>
+      <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>There’s a lot inside this implementation but to cover the basics:</p>
+
+<ol>
+  <li>I use a row-major format, so the method for creating a buffer for WebGPU needs
+to convert the output to a column-major format.</li>
+  <li>There is a matrix multiplication method. Since we store our matrix as
+vectors, we can use the definition of the dot product for an implementation
+that closely resembles the definition of matrix multiplication.</li>
+  <li>I have added a static method for returning a zero matrix, for convenience. I
+may even recommend adding an identity method, too. I often use that for
+debugging matrix composition issues.</li>
+</ol>
+
+<h3 id="view-projection">View projection</h3>
+
+<p>Create a file called <code class="language-plaintext highlighter-rouge">camera.ts</code> at the top level of your source directory. I’ve
+added comments inline with the implementation, but feel free to omit these.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span><span class="nx">Mat4</span><span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">./math/mat4</span><span class="dl">"</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span><span class="nx">Vec3</span><span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">./math/vec3</span><span class="dl">"</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">Camera</span> <span class="p">{</span>
+  <span class="nl">position</span><span class="p">:</span> <span class="nx">Vec3</span><span class="p">;</span>
+  <span class="nl">yaw</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+  <span class="k">private</span> <span class="nx">_pitch</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">position</span><span class="p">:</span> <span class="nx">Vec3</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">position</span> <span class="o">=</span> <span class="nx">position</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">yaw</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_pitch</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">get</span> <span class="nx">pitch</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">_pitch</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * Set the pitch between -90 and 90 degrees. Anything else is disregarded as
+   * we treat y as up.
+   */</span>
+  <span class="kd">set</span> <span class="nx">pitch</span><span class="p">(</span><span class="nx">value</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_pitch</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">0.01</span><span class="p">,</span> <span class="nx">value</span><span class="p">));</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * Our view matrix, as derived in the 3D projection series.
+   */</span>
+  <span class="nx">matrix</span><span class="p">():</span> <span class="nx">Mat4</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">e</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">position</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">d</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">dir</span><span class="p">();</span>
+    <span class="kd">const</span> <span class="nx">r</span> <span class="o">=</span> <span class="nx">d</span><span class="p">.</span><span class="nx">cross</span><span class="p">(</span><span class="k">new</span> <span class="nx">Vec3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">));</span>
+    <span class="kd">const</span> <span class="nx">u</span> <span class="o">=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">cross</span><span class="p">(</span><span class="nx">d</span><span class="p">);</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Mat4</span><span class="p">(</span>
+       <span class="nx">r</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span>  <span class="nx">r</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>  <span class="nx">r</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span> <span class="o">-</span><span class="nx">e</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">r</span><span class="p">),</span>
+       <span class="nx">u</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span>  <span class="nx">u</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span>  <span class="nx">u</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span> <span class="o">-</span><span class="nx">e</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">u</span><span class="p">),</span>
+      <span class="o">-</span><span class="nx">d</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="o">-</span><span class="nx">d</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="o">-</span><span class="nx">d</span><span class="p">.</span><span class="nx">z</span><span class="p">,</span>  <span class="nx">e</span><span class="p">.</span><span class="nx">dot</span><span class="p">(</span><span class="nx">d</span><span class="p">),</span>
+         <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>    <span class="mi">0</span><span class="p">,</span>         <span class="mi">1</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * For illustration, you don't need this. This is a naive implementation for
+   * "right" because, based on our derivations, the dir, right and up vectors
+   * must be orthogonal.
+   */</span>
+  <span class="nx">right</span><span class="p">():</span> <span class="nx">Vec3</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Vec3</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">yaw</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">yaw</span><span class="p">));</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**
+   * A slightly unconventional direction matrix. I assume a yaw of zero faces
+   * negative z. I've more commonly seen it face positive x in other
+   * implementations. I've kept the convention that a positive yaw rotates
+   * counter-clockwise.
+   */</span>
+  <span class="nx">dir</span><span class="p">():</span> <span class="nx">Vec3</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">xzLength</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pitch</span><span class="p">);</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Vec3</span><span class="p">(</span>
+      <span class="o">-</span><span class="nx">xzLength</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">yaw</span><span class="p">),</span>
+      <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pitch</span><span class="p">),</span>
+      <span class="o">-</span><span class="nx">xzLength</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">yaw</span><span class="p">),</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Create another file called <code class="language-plaintext highlighter-rouge">projection.ts</code>. This is our perspective projection
+as derived in the 3D projection series. There is not much else to this class!
+You could also cache the matrix result internally and only change it whenever
+one of the parameters change using setters, as the projection does not often
+change every frame for most applications.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span><span class="nx">Mat4</span><span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">./math/mat4</span><span class="dl">"</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">Projection</span> <span class="p">{</span>
+  <span class="nl">width</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+  <span class="nl">height</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+  <span class="nl">fovY</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+  <span class="nl">near</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+  <span class="nl">far</span><span class="p">:</span> <span class="kr">number</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span>
+    <span class="nx">width</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">height</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">fovYRadians</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">near</span><span class="p">:</span> <span class="kr">number</span><span class="p">,</span>
+    <span class="nx">far</span><span class="p">:</span> <span class="kr">number</span>
+  <span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">width</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">height</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fovY</span> <span class="o">=</span> <span class="nx">fovYRadians</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">near</span> <span class="o">=</span> <span class="nx">near</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">far</span> <span class="o">=</span> <span class="nx">far</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">matrix</span><span class="p">():</span> <span class="nx">Mat4</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">perspMatrix</span> <span class="o">=</span> <span class="nx">Mat4</span><span class="p">.</span><span class="nx">zero</span><span class="p">();</span>
+    <span class="kd">const</span> <span class="nx">aspect</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="k">this</span><span class="p">.</span><span class="nx">height</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">tan</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">tan</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">fovY</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="nx">perspMatrix</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">x</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="nx">aspect</span> <span class="o">*</span> <span class="nx">tan</span><span class="p">);</span>
+    <span class="nx">perspMatrix</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">y</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="nx">tan</span><span class="p">;</span>
+    <span class="nx">perspMatrix</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">z</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">far</span> <span class="o">/</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">near</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">far</span><span class="p">);</span>
+    <span class="nx">perspMatrix</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">w</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">far</span> <span class="o">*</span> <span class="k">this</span><span class="p">.</span><span class="nx">near</span> <span class="o">/</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">near</span> <span class="o">-</span> <span class="k">this</span><span class="p">.</span><span class="nx">far</span><span class="p">);</span>
+    <span class="nx">perspMatrix</span><span class="p">.</span><span class="nx">rows</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="nx">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">perspMatrix</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>For convenience, I’ve also created a file for static configuration called
+<code class="language-plaintext highlighter-rouge">config.ts</code> and I’ve added the following two constants:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">SCREEN_WIDTH</span> <span class="o">=</span> <span class="mi">768</span><span class="p">;</span>
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">SCREEN_HEIGHT</span> <span class="o">=</span> <span class="mi">768</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>This is just so that I can authoritatively manage and reference the width and
+height in once place. I’ve removed the width and height from the canvas in the
+HTML.</p>
+
+<p>At the last stretch, we move to the <code class="language-plaintext highlighter-rouge">main.ts</code> file. First, set the canvas width
+and height using our new static config variables.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">SCREEN_WIDTH</span><span class="p">;</span>
+<span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">SCREEN_HEIGHT</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>We can add the <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi></mrow><annotation encoding="application/x-tex">z</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span></span></span></span> coordinate to our quad, but just set it to zero for now. This
+also means we must update the vertex buffer layout:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">vertices</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Float32Array</span><span class="p">([</span>
+  <span class="c1">// x, y, z, u, v</span>
+  <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+  <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+  <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+  <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">...</span><span class="nx">uvFromIndex</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nx">texture</span><span class="p">),</span>
+<span class="p">]);</span>
+
+<span class="p">...</span>
+
+<span class="kd">const</span> <span class="nx">vertexBufferLayout</span><span class="p">:</span> <span class="nx">GPUVertexBufferLayout</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">stepMode</span><span class="p">:</span> <span class="dl">"</span><span class="s2">vertex</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">arrayStride</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="c1">// updated</span>
+  <span class="na">attributes</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span> <span class="c1">// pos</span>
+      <span class="na">format</span><span class="p">:</span> <span class="dl">"</span><span class="s2">float32x3</span><span class="dl">"</span><span class="p">,</span> <span class="c1">// updated</span>
+      <span class="na">offset</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+      <span class="na">shaderLocation</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="p">{</span> <span class="c1">// uv</span>
+      <span class="na">format</span><span class="p">:</span> <span class="dl">"</span><span class="s2">float32x2</span><span class="dl">"</span><span class="p">,</span>
+      <span class="na">offset</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="c1">// updated</span>
+      <span class="na">shaderLocation</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>We’re going to want to specify a new buffer inside of our bind group layout.
+This is called a uniform, which is essentially a value that is the same (or
+uniform) across an entire render pass. Our view and projection matrices are
+great candidates for this, as each vertex needs this information.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">...</span>
+<span class="p">{</span>
+  <span class="nl">binding</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="nx">visibility</span><span class="p">:</span> <span class="nx">GPUShaderStage</span><span class="p">.</span><span class="nx">VERTEX</span> <span class="o">|</span> <span class="nx">GPUShaderStage</span><span class="p">.</span><span class="nx">FRAGMENT</span><span class="p">,</span>
+  <span class="nx">buffer</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nl">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">uniform</span><span class="dl">"</span>
+<span class="p">},</span>
+<span class="p">...</span>
+</code></pre></div></div>
+
+<p>Just above our bind group, itself, we’re going to want to calculate the view and
+projection matrices (compressed into one) and write that out as the contents of
+our new uniform buffer.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// place the camera at z=5 (it's looking down -z)</span>
+<span class="kd">const</span> <span class="nx">camera</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Camera</span><span class="p">(</span><span class="k">new</span> <span class="nx">Vec3</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">));</span>
+<span class="kd">const</span> <span class="nx">projection</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Projection</span><span class="p">(</span>
+  <span class="nx">SCREEN_WIDTH</span><span class="p">,</span>
+  <span class="nx">SCREEN_HEIGHT</span><span class="p">,</span>
+  <span class="c1">// choose a very small FOV to have a near-isometric look</span>
+  <span class="nx">toRadians</span><span class="p">(</span><span class="mi">35</span><span class="p">),</span>
+  <span class="mf">0.1</span><span class="p">,</span>
+  <span class="mi">500</span>
+<span class="p">);</span>
+<span class="c1">// pre-multiply our view and projection matrices once before rendering</span>
+<span class="c1">// this avoids the need to do the same multiplication for every vertex!</span>
+<span class="kd">const</span> <span class="nx">viewProj</span> <span class="o">=</span> <span class="nx">projection</span><span class="p">.</span><span class="nx">matrix</span><span class="p">().</span><span class="nx">mul</span><span class="p">(</span><span class="nx">camera</span><span class="p">.</span><span class="nx">matrix</span><span class="p">());</span>
+
+<span class="c1">// Create a uniform buffer using the [Mat4] buffer method.</span>
+<span class="kd">const</span> <span class="nx">uniformsArray</span> <span class="o">=</span> <span class="nx">viewProj</span><span class="p">.</span><span class="nx">buffer</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">uniformsBuffer</span> <span class="o">=</span> <span class="nx">device</span><span class="p">.</span><span class="nx">createBuffer</span><span class="p">({</span>
+  <span class="na">label</span><span class="p">:</span> <span class="dl">"</span><span class="s2">uniforms buffer</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">size</span><span class="p">:</span> <span class="nx">uniformsArray</span><span class="p">.</span><span class="nx">byteLength</span><span class="p">,</span>
+  <span class="na">usage</span><span class="p">:</span> <span class="nx">GPUBufferUsage</span><span class="p">.</span><span class="nx">UNIFORM</span> <span class="o">|</span> <span class="nx">GPUBufferUsage</span><span class="p">.</span><span class="nx">COPY_DST</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="nx">device</span><span class="p">.</span><span class="nx">queue</span><span class="p">.</span><span class="nx">writeBuffer</span><span class="p">(</span><span class="nx">uniformsBuffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">uniformsArray</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>You’ll notice the <code class="language-plaintext highlighter-rouge">toRadians</code> method. I’ve created a <code class="language-plaintext highlighter-rouge">helpers.ts</code> file in the
+<code class="language-plaintext highlighter-rouge">math</code> directory for some common methods.</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">export</span> <span class="kd">function</span> <span class="nx">toRadians</span><span class="p">(</span><span class="nx">degrees</span><span class="p">:</span> <span class="kr">number</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">degrees</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span> <span class="o">/</span> <span class="mi">180</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Now, add the uniform buffer to our bind group:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">...</span>
+<span class="p">{</span>
+  <span class="nl">binding</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="nx">resource</span><span class="p">:</span> <span class="p">{</span><span class="nl">buffer</span><span class="p">:</span> <span class="nx">uniformsBuffer</span><span class="p">},</span>
+<span class="p">}</span>
+<span class="p">...</span>
+</code></pre></div></div>
+
+<p>Now, our last step is to wire this all together in the shader. First, update the
+position to include the new <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi></mrow><annotation encoding="application/x-tex">z</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span></span></span></span>-coordinate.</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="nf">location</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="n">pos</span><span class="p">:</span> <span class="n">vec3f</span><span class="p">,</span>
+</code></pre></div></div>
+
+<p>Define a struct to represent our uniform values:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">Uniforms</span> <span class="p">{</span>
+  <span class="n">viewProj</span><span class="p">:</span> <span class="n">mat4x4f</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>Add the binding for our bind group:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">@</span><span class="nf">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">@</span><span class="nf">binding</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="n">var</span><span class="o">&lt;</span><span class="n">uniform</span><span class="o">&gt;</span> <span class="n">uniforms</span><span class="p">:</span> <span class="n">Uniforms</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>And finally, multiply the view projection matrix by our vertex position:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">output</span><span class="py">.clip_pos</span> <span class="o">=</span> <span class="n">uniforms</span><span class="py">.viewProj</span> <span class="o">*</span> <span class="nf">vec4f</span><span class="p">(</span><span class="k">in</span><span class="py">.pos.xyz</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>You may have noticed that I’ve omitted the model matrix. We’ll add that in a
+follow up post, but this is sufficient for presenting the projection.</p>
+
+<h2 id="confirmation">Confirmation</h2>
+
+<p>You may not find the above satisfactory in terms of correctness. You could
+definitely throw these values into some unit &amp; fuzz tests to ensure the edge
+cases are handled, but for my purposes I’ve just played around with various
+configurations.</p>
+
+<p>For example, try and modify the screen width – lie and say it’s half the size
+for your projection. Notice how the image stretches as if targeted for a thinner
+canvas.</p>
+
+<p>I made a follow up commit just to test the projection in an animated fashion.
+It’s worth following along, as I’ll keep some of this machinery until the end.
+First, I moved the render pass into an animation frame:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">eventLoop</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// entire render pass here</span>
+
+    <span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="nx">eventLoop</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// kick off the render loop</span>
+<span class="nx">requestAnimationFrame</span><span class="p">(</span><span class="nx">eventLoop</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This just ensures that the render loop is called at about the same rate as your
+screen’s refresh rate. There’s no real reason to go much faster than that, other
+than making a warm box or reducing battery life in some sort of odd competition.</p>
+
+<p>Now, for the preamble to the event loop, I’ve added the following:</p>
+
+<div class="language-ts highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">now</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+<span class="c1">// how far the camera is from its target</span>
+<span class="kd">const</span> <span class="nx">radius</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="c1">// an angle that changes at a rate of about a radian per second.</span>
+<span class="kd">const</span> <span class="nx">angle</span> <span class="o">=</span> <span class="nx">now</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="c1">// start the camera at z=5, x=0 looking down the negative z.</span>
+<span class="c1">// confirm this makes sense by working in 90 degree increments.</span>
+<span class="nx">camera</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">x</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">sin</span><span class="p">(</span><span class="nx">angle</span><span class="p">)</span> <span class="o">*</span> <span class="nx">radius</span><span class="p">;</span>
+<span class="nx">camera</span><span class="p">.</span><span class="nx">position</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">angle</span><span class="p">)</span> <span class="o">*</span> <span class="nx">radius</span><span class="p">;</span>
+<span class="nx">camera</span><span class="p">.</span><span class="nx">yaw</span> <span class="o">=</span> <span class="nx">angle</span><span class="p">;</span>
+<span class="c1">// vary the FOV at half the rate of the camera's yaw</span>
+<span class="nx">projection</span><span class="p">.</span><span class="nx">fovY</span> <span class="o">=</span> <span class="nx">toRadians</span><span class="p">(</span><span class="mi">60</span> <span class="o">+</span> <span class="p">(</span><span class="mi">30</span> <span class="o">*</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">cos</span><span class="p">(</span><span class="nx">now</span> <span class="o">/</span> <span class="mi">2000</span><span class="p">)));</span>
+
+<span class="c1">// submit the new view-projection matrix</span>
+<span class="kd">const</span> <span class="nx">viewProj</span> <span class="o">=</span> <span class="nx">projection</span><span class="p">.</span><span class="nx">matrix</span><span class="p">().</span><span class="nx">mul</span><span class="p">(</span><span class="nx">camera</span><span class="p">.</span><span class="nx">matrix</span><span class="p">());</span>
+<span class="kd">const</span> <span class="nx">uniformsArray</span> <span class="o">=</span> <span class="nx">viewProj</span><span class="p">.</span><span class="nx">buffer</span><span class="p">();</span>
+<span class="nx">device</span><span class="p">.</span><span class="nx">queue</span><span class="p">.</span><span class="nx">writeBuffer</span><span class="p">(</span><span class="nx">uniformsBuffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">uniformsArray</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>This exercises a few of the values we have available to modify the projection.
+You should end up with the following animation. The camera is moving
+counter-clockwise around the quad, and its FOV is changing (giving the
+appearance that the camera is moving back and forth).</p>
+
+<div class="centered">
+    <video muted="" autoplay="" controls="" width="384">
+        <source src="/assets/webgpu-game-3-textures-and-projections/rotating.webm" type="video/webm" />
+    </video>
+</div>
+
+<h2 id="links">Links</h2>
+
+<ol>
+  <li><a href="https://github.com/battesonb/webgpu-blog-game/tree/ad6823266d6faa80ad65306fadda4cdcb3190020">Git tree</a></li>
+</ol>
+
+<h2 id="footnotes">Footnotes</h2>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p><a href="https://en.wikipedia.org/wiki/Programmer_art">https://en.wikipedia.org/wiki/Programmer_art</a> <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:2" role="doc-endnote">
+      <p>WebGPU also has support for texture arrays which I have not fully explored yet. <a href="https://en.wikipedia.org/wiki/Texture_atlas">https://en.wikipedia.org/wiki/Texture_atlas</a> <a href="#fnref:2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:3" role="doc-endnote">
+      <p><a href="https://en.wikipedia.org/wiki/Mipmap">https://en.wikipedia.org/wiki/Mipmap</a> <a href="#fnref:3" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:4" role="doc-endnote">
+      <p>This and more builtin functions are specified in the WebGPU W3C working draft: <a href="https://www.w3.org/TR/WGSL/#texturesample">https://www.w3.org/TR/WGSL/#texturesample</a> <a href="#fnref:4" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </div>
+
+  <!-- Show links to previous and next post if in a series --><div class="post-nav"><hr/>
+          <h3>WebGPU game series links</h3><div class="post-nav-links"><div class="post-nav-prev">
+              <a href="/graphics/2023/06/07/webgpu-game-2-rainbow-triangle.html">&laquo; WebGPU game (#2): Rainbow triangle</a>
+            </div><div class="post-nav-next">
+              <a href="/graphics/2023/07/06/webgpu-game-4-depth-and-instances.html">WebGPU game (#4): Depth and Instances &raquo;</a>
+            </div></div>
+        </div><a class="u-url" href="/graphics/2023/07/04/webgpu-game-3-textures-and-projections.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Byron&#39;s Blog
+            </li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/battesonb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">battesonb</span></a></li><li><a href="https://www.twitter.com/battesonb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">battesonb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>A blog about web, software, computer science and related fields.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
